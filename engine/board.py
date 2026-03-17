@@ -112,7 +112,35 @@ class Board:
 
 
 
+def draw_board(player, boxes, goals, obstacles, size):
+    import os
+    grid = [['.' for i in range(size)] for j in range(size)]
+
+    for goal in goals:
+        grid[goal[0]][goal[1]] = 'G'
+
+    grid [player[0]][player[1]] = 'P'
+
+    for box in boxes:
+        grid[box[0]][box[1]] = 'B'
+
+    for obstacle in obstacles:
+        grid[obstacle[0]][obstacle[1]] = 'O'
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    for row in grid:
+        print(" ".join(row))
+
+def sokoban_terminal():
+    board = Board()
+
+    while True:
+        p,b,g,o = board.get_positions()
+        draw_board(p,b,g,o,board.grid_size)
+        key = input("Press w/a/s/d: ")
+        board.input_handle(key)
+
+
 
 if __name__ == "__main__":
-    b = Board()
-    print(b.player_pos, b.boxes_pos, b.goals_pos)
+    sokoban_terminal()
