@@ -1,9 +1,15 @@
 from random import randint
+from collections import deque
+from copy import deepcopy
 
 class Board:
     def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 3):
         self.grid_size = grid_size
         self.player_pos = [grid_size // 2, grid_size // 2]
+        self.num_of_boxes = num_of_boxes
+        self.num_of_obstacles = num_of_obstacles
+        self.undo = deque()
+        self.redo = deque()
 
         # Randomly chooses position of boxes
         self.boxes_pos = []
@@ -33,28 +39,78 @@ class Board:
     def get_positions(self):
         return self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos
 
-    def player_move(self, key):
-        if key.lower() == 'w':
-            new_pos_player = self.player_pos[:]
-            new_pos_player[0] -= 1
+    def input_handle(self, key):
+        if key.lower() == 'w': vec = [-1, 0]    # going up
+        elif key.lower() == 's': vec = [1, 0]   # going down
+        elif key.lower() == 'a': vec = [0, -1]  # going left
+        elif key.lower() == 'd': vec = [0, 1]   # going right
+        elif key.lower() == 'u':
+            self._undo_handle()
+            return
+        elif key.lower() == 'r':
+            self._redo_handle()
+            return
+        else: return
 
-            # If obstacle or outside the area
-            if new_pos_player in self.obstacles_pos or new_pos_player[0] < 0 or new_pos_player[0] >= self.grid_size\
-                    or new_pos_player[1] < 0 or new_pos_player[1] >= self.grid_size:
-                return
+        old_pos_player = deepcopy(self.player_pos)
+        old_pos_boxes = deepcopy(self.boxes_pos)
 
-            for i, box in enumerate(self.boxes_pos):
-                if new_pos_player == box:
-                    new_pos_box = box[:]
-                    new_pos_box[0] -= 1
+        new_pos_player = self.player_pos[:]
+        new_pos_player [0] += vec[0]
+        new_pos_player [1] += vec[1]
 
-                    if new_pos_box in self.obstacles_pos or new_pos_box in self.boxes_pos or new_pos_box[0] < 0 or new_pos_box[0] >= self.grid_size\
-                    or new_pos_box[1] < 0 or new_pos_box[1] >= self.grid_size:
-                        return
+        # If obstacle or outside the area
+        if new_pos_player in self.obstacles_pos or new_pos_player[0] < 0 or new_pos_player[0] >= self.grid_size\
+                or new_pos_player[1] < 0 or new_pos_player[1] >= self.grid_size:
+            return
 
-                    self.boxes_pos[i] = new_pos_box
+        for i, box in enumerate(self.boxes_pos):
+            if new_pos_player == box:
+                new_pos_box = box[:]
+                new_pos_box [0] += vec[0]
+                new_pos_box [1] += vec[1]
 
-            self.player_pos = new_pos_player
+                if new_pos_box in self.obstacles_pos or new_pos_box in self.boxes_pos or new_pos_box[0] < 0 or new_pos_box[0] >= self.grid_size\
+                or new_pos_box[1] < 0 or new_pos_box[1] >= self.grid_size:
+                    return
+
+                self.boxes_pos[i] = new_pos_box
+                break
+
+        self.player_pos = new_pos_player
+
+        # If it is movement, clear redo
+        self.redo.clear()
+        self.undo.append((old_pos_player, old_pos_boxes))
+
+    def _undo_handle(self):
+        if self.undo:
+            current_pos_player = deepcopy(self.player_pos)
+            current_pos_boxes = deepcopy(self.boxes_pos)
+
+            # Getting top element
+            top = self.undo.pop()
+
+            self.redo.append((current_pos_player, current_pos_boxes))
+
+            self.player_pos = top[0]
+            self.boxes_pos = top[1]
+
+
+    def _redo_handle(self):
+        if self.redo:
+            current_pos_player = deepcopy(self.player_pos)
+            current_pos_boxes = deepcopy(self.boxes_pos)
+
+            # Getting top element
+            top = self.redo.pop()
+
+            self.undo.append((current_pos_player, current_pos_boxes))
+
+            self.player_pos = top[0]
+            self.boxes_pos = top[1]
+
+
 
 
 if __name__ == "__main__":
