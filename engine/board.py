@@ -1,43 +1,51 @@
 from random import randint
 from collections import deque
-from copy import deepcopy
 
 class Board:
     def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 3):
         self.grid_size = grid_size
-        self.player_pos = [grid_size // 2, grid_size // 2]
+        self.player_pos = (grid_size // 2, grid_size // 2)
         self.num_of_boxes = num_of_boxes
         self.num_of_obstacles = num_of_obstacles
         self.undo = deque()
         self.redo = deque()
+        self.num_of_moves = 0
+        self.num_of_undo = 0
+        self.num_of_redo = 0
 
         # Randomly chooses position of boxes
         self.boxes_pos = []
         for i in range(num_of_boxes):
-            pos = [randint(1, grid_size - 2), randint(1, grid_size - 2)]
+            pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
             while pos == self.player_pos or pos in self.boxes_pos:
-                pos = [randint(1, grid_size - 2), randint(1, grid_size - 2)]
+                pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
             self.boxes_pos.append(pos)
 
         # Randomly chooses positions of goals
         self.goals_pos = []
         for i in range(num_of_boxes):
-            pos = [randint(0, grid_size - 1), randint(0, grid_size - 1)]
+            pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
             while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
-                pos = [randint(0, grid_size - 1), randint(0, grid_size - 1)]
+                pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
             self.goals_pos.append(pos)
 
         # Randomly chooses positions of obstacles
         self.obstacles_pos = []
         for i in range(num_of_obstacles):
-            pos = [randint(0, grid_size - 1), randint(0, grid_size - 1)]
+            pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
             while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos or pos in self.obstacles_pos:
-                pos = [randint(0, grid_size - 1), randint(0, grid_size - 1)]
+                pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
             self.obstacles_pos.append(pos)
+
+        # Saving initial position for reset
+        self.initial_pos = [self.player_pos, self.boxes_pos.copy()]
 
 
     def get_positions(self):
         return self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos
+
+    def get_stats(self):
+        return self.num_of_moves, self.num_of_undo, self.num_of_redo
 
     def input_handle(self, key):
         if key.lower() == 'w': vec = [-1, 0]    # going up
@@ -50,14 +58,15 @@ class Board:
         elif key.lower() == 'r':
             self._redo_handle()
             return
+        elif key.lower() == "p":
+            self._reset_handle()
+            return
         else: return
 
-        old_pos_player = deepcopy(self.player_pos)
-        old_pos_boxes = deepcopy(self.boxes_pos)
+        old_pos_player = self.player_pos
+        old_pos_boxes = self.boxes_pos.copy()
 
-        new_pos_player = self.player_pos[:]
-        new_pos_player [0] += vec[0]
-        new_pos_player [1] += vec[1]
+        new_pos_player = (self.player_pos[0] + vec[0], self.player_pos[1] + vec[1])
 
         # If obstacle or outside the area
         if new_pos_player in self.obstacles_pos or new_pos_player[0] < 0 or new_pos_player[0] >= self.grid_size\
@@ -66,9 +75,7 @@ class Board:
 
         for i, box in enumerate(self.boxes_pos):
             if new_pos_player == box:
-                new_pos_box = box[:]
-                new_pos_box [0] += vec[0]
-                new_pos_box [1] += vec[1]
+                new_pos_box = (box[0] + vec[0], box[1] + vec[1])
 
                 if new_pos_box in self.obstacles_pos or new_pos_box in self.boxes_pos or new_pos_box[0] < 0 or new_pos_box[0] >= self.grid_size\
                 or new_pos_box[1] < 0 or new_pos_box[1] >= self.grid_size:
@@ -78,6 +85,7 @@ class Board:
                 break
 
         self.player_pos = new_pos_player
+        self.num_of_moves += 1
 
         # If it is movement, clear redo
         self.redo.clear()
@@ -85,8 +93,8 @@ class Board:
 
     def _undo_handle(self):
         if self.undo:
-            current_pos_player = deepcopy(self.player_pos)
-            current_pos_boxes = deepcopy(self.boxes_pos)
+            current_pos_player = self.player_pos
+            current_pos_boxes = self.boxes_pos.copy()
 
             # Getting top element
             top = self.undo.pop()
@@ -95,12 +103,13 @@ class Board:
 
             self.player_pos = top[0]
             self.boxes_pos = top[1]
+            self.num_of_undo += 1
 
 
     def _redo_handle(self):
         if self.redo:
-            current_pos_player = deepcopy(self.player_pos)
-            current_pos_boxes = deepcopy(self.boxes_pos)
+            current_pos_player = self.player_pos
+            current_pos_boxes = self.boxes_pos.copy()
 
             # Getting top element
             top = self.redo.pop()
@@ -109,6 +118,18 @@ class Board:
 
             self.player_pos = top[0]
             self.boxes_pos = top[1]
+            self.num_of_redo += 1
+
+    def _reset_handle(self):
+        self.redo.clear()
+        self.undo.clear()
+        self.boxes_pos.clear()
+        self.player_pos = self.initial_pos[0]
+        self.boxes_pos = self.initial_pos[1].copy()
+        self.num_of_moves = 0
+        self.num_of_redo = 0
+        self.num_of_undo = 0
+
 
 
 
