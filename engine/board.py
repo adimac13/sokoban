@@ -177,7 +177,11 @@ class Board:
         with open(str(saving_path), "w") as f:
             f.write(f_str)
 
-
+    def status(self):
+        i = set(self.boxes_pos) & set(self.goals_pos)
+        if len(i) == len(self.goals_pos):
+            return 1
+        return 0
 
 
 def draw_board(player, boxes, goals, obstacles, size):
@@ -205,8 +209,12 @@ def sokoban_terminal():
     while True:
         p,b,g,o = board.get_positions()
         draw_board(p,b,g,o,board.grid_size)
-        key = input("Press w/a/s/d: ")
-        board.input_handle(key)
+        if board.status():
+            print("Won")
+            break
+        else:
+            key = input("Press w/a/s/d: ")
+            board.input_handle(key)
 
 
 
