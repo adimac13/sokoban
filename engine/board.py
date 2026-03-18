@@ -1,5 +1,7 @@
 from random import randint
 from collections import deque
+import json
+from pathlib import Path
 
 class Board:
     def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 3):
@@ -47,7 +49,7 @@ class Board:
     def get_stats(self):
         return self.num_of_moves, self.num_of_undo, self.num_of_redo
 
-    def input_handle(self, key):
+    def input_handle(self, key, path = Path('./')):
         if key.lower() == 'w': vec = [-1, 0]    # going up
         elif key.lower() == 's': vec = [1, 0]   # going down
         elif key.lower() == 'a': vec = [0, -1]  # going left
@@ -58,8 +60,11 @@ class Board:
         elif key.lower() == 'r':
             self._redo_handle()
             return
-        elif key.lower() == "p":
+        elif key.lower() == 'p':
             self._reset_handle()
+            return
+        elif key.lower() == 'j':
+            self._save_to_json(path)
             return
         else: return
 
@@ -130,6 +135,20 @@ class Board:
         self.num_of_redo = 0
         self.num_of_undo = 0
 
+    def _save_to_json(self, path):
+        f = {
+            "player" : self.player_pos,
+            "boxes" : self.boxes_pos,
+            "goals" : self.goals_pos,
+            "obstacles" : self.obstacles_pos,
+            "size" : self.grid_size
+        }
+        f_str = json.dumps(f)
+
+        saving_path = path / 'sample.json'
+        with open(str(saving_path), "w") as f:
+            f.write(f_str)
+
 
 
 
@@ -148,7 +167,7 @@ def draw_board(player, boxes, goals, obstacles, size):
     for obstacle in obstacles:
         grid[obstacle[0]][obstacle[1]] = 'O'
 
-    os.system('cls' if os.name == 'nt' else 'clear')
+    # os.system('cls' if os.name == 'nt' else 'clear')
     for row in grid:
         print(" ".join(row))
 
