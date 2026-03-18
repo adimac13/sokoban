@@ -4,40 +4,68 @@ import json
 from pathlib import Path
 
 class Board:
-    def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 3):
-        self.grid_size = grid_size
-        self.player_pos = (grid_size // 2, grid_size // 2)
-        self.num_of_boxes = num_of_boxes
-        self.num_of_obstacles = num_of_obstacles
+    def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 3, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
         self.num_of_undo = 0
         self.num_of_redo = 0
 
-        # Randomly chooses position of boxes
-        self.boxes_pos = []
-        for i in range(num_of_boxes):
-            pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
-            while pos == self.player_pos or pos in self.boxes_pos:
+        if json_path is None:
+            self.grid_size = grid_size
+            self.player_pos = (grid_size // 2, grid_size // 2)
+            self.num_of_boxes = num_of_boxes
+            self.num_of_obstacles = num_of_obstacles
+
+            # Randomly chooses position of boxes
+            self.boxes_pos = []
+            for i in range(num_of_boxes):
                 pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
-            self.boxes_pos.append(pos)
+                while pos == self.player_pos or pos in self.boxes_pos:
+                    pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
+                self.boxes_pos.append(pos)
 
-        # Randomly chooses positions of goals
-        self.goals_pos = []
-        for i in range(num_of_boxes):
-            pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-            while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
+            # Randomly chooses positions of goals
+            self.goals_pos = []
+            for i in range(num_of_boxes):
                 pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-            self.goals_pos.append(pos)
+                while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
+                    pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
+                self.goals_pos.append(pos)
 
-        # Randomly chooses positions of obstacles
-        self.obstacles_pos = []
-        for i in range(num_of_obstacles):
-            pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-            while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos or pos in self.obstacles_pos:
+            # Randomly chooses positions of obstacles
+            self.obstacles_pos = []
+            for i in range(num_of_obstacles):
                 pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-            self.obstacles_pos.append(pos)
+                while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos or pos in self.obstacles_pos:
+                    pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
+                self.obstacles_pos.append(pos)
+        else:
+            with open(str(json_path), 'r') as f:
+                self.boxes_pos = []
+                self.goals_pos = []
+                self.obstacles_pos = []
+
+                data = json.load(f)
+
+                p = data['player']
+                b = data['boxes']
+                g = data['goals']
+                o = data['obstacles']
+                s = data['size']
+
+                self.player_pos = tuple(p)
+
+                for box in b:
+                    self.boxes_pos.append(tuple(box))
+
+                for goal in g:
+                    self.goals_pos.append(tuple(goal))
+
+                for obstacle in o:
+                    self.obstacles_pos.append(tuple(obstacle))
+
+                self.grid_size = s
 
         # Saving initial position for reset
         self.initial_pos = [self.player_pos, self.boxes_pos.copy()]
@@ -167,12 +195,12 @@ def draw_board(player, boxes, goals, obstacles, size):
     for obstacle in obstacles:
         grid[obstacle[0]][obstacle[1]] = 'O'
 
-    # os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
     for row in grid:
         print(" ".join(row))
 
 def sokoban_terminal():
-    board = Board()
+    board = Board(json_path='sample.json')
 
     while True:
         p,b,g,o = board.get_positions()
