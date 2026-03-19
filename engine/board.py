@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 class Board:
-    def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 3, json_path = None):
+    def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 10, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
@@ -137,6 +137,7 @@ class Board:
             self.player_pos = top[0]
             self.boxes_pos = top[1]
             self.num_of_undo += 1
+            self.num_of_moves -= 1
 
 
     def _redo_handle(self):
@@ -152,6 +153,7 @@ class Board:
             self.player_pos = top[0]
             self.boxes_pos = top[1]
             self.num_of_redo += 1
+            self.num_of_moves += 1
 
     def _reset_handle(self):
         self.redo.clear()
@@ -164,20 +166,24 @@ class Board:
         self.num_of_undo = 0
 
     def _save_to_json(self, path):
-        f = {
+        data = {
             "player" : self.player_pos,
             "boxes" : self.boxes_pos,
             "goals" : self.goals_pos,
             "obstacles" : self.obstacles_pos,
             "size" : self.grid_size
         }
-        f_str = json.dumps(f)
 
-        saving_path = path / 'sample.json'
+        path /= 'saved_boards'
+        path.mkdir(exist_ok=True, parents=True)
+
+        num_of_files = len(list(path.glob('*board*')))
+        saving_path = path / f'board_{num_of_files}.json'
         with open(str(saving_path), "w") as f:
-            f.write(f_str)
+            json.dump(data, f)
 
     def status(self):
+        # 1 if all boxes are on goal positions, else 0
         i = set(self.boxes_pos) & set(self.goals_pos)
         if len(i) == len(self.goals_pos):
             return 1
@@ -204,7 +210,8 @@ def draw_board(player, boxes, goals, obstacles, size):
         print(" ".join(row))
 
 def sokoban_terminal():
-    board = Board(json_path='sample.json')
+    # board = Board(json_path='./saved_boards/board_1.json')
+    board = Board()
 
     while True:
         p,b,g,o = board.get_positions()
