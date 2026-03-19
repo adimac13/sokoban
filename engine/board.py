@@ -2,14 +2,16 @@ from random import randint
 from collections import deque
 import json
 from pathlib import Path
+from evaluation import find_deadlocks
 
 class Board:
-    def __init__(self, grid_size = 12, num_of_boxes = 3, num_of_obstacles = 10, json_path = None):
+    def __init__(self, grid_size = 12, num_of_boxes = 4, num_of_obstacles = 10, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
         self.num_of_undo = 0
         self.num_of_redo = 0
+        self.evaluation = None
 
         if json_path is None:
             self.grid_size = grid_size
@@ -115,6 +117,11 @@ class Board:
                     return
 
                 self.boxes_pos[i] = new_pos_box
+
+                # Evaluation
+                other_boxes_pos = [box for j,box in enumerate(self.boxes_pos) if j!=i]
+                self.evaluation = find_deadlocks(new_pos_box, other_boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
+
                 break
 
         self.player_pos = new_pos_player
@@ -220,6 +227,7 @@ def sokoban_terminal():
             print("Won")
             break
         else:
+            print(board.evaluation)
             key = input("Press w/a/s/d: ")
             board.input_handle(key)
 
