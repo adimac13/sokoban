@@ -2,7 +2,8 @@ from random import randint
 from collections import deque
 import json
 from pathlib import Path
-from evaluation import find_deadlocks
+from evaluation import find_deadlocks, heuristic_evaluation
+from itertools import permutations
 
 class Board:
     def __init__(self, grid_size = 12, num_of_boxes = 4, num_of_obstacles = 10, json_path = None):
@@ -12,6 +13,9 @@ class Board:
         self.num_of_undo = 0
         self.num_of_redo = 0
         self.evaluation = None
+
+        # Setting all permutations at the beginning for faster heuristic evaluation
+        self.all_permutations = list(permutations(range(num_of_boxes)))
 
         if json_path is None:
             self.grid_size = grid_size
@@ -196,6 +200,10 @@ class Board:
             return 1
         return 0
 
+    def min_number_of_moves(self):
+        return heuristic_evaluation(self.boxes_pos, self.goals_pos, self.all_permutations)
+
+# ------------------- TERMINAL HANDLE ---------------------
 
 def draw_board(player, boxes, goals, obstacles, size):
     import os
@@ -227,7 +235,7 @@ def sokoban_terminal():
             print("Won")
             break
         else:
-            print(board.evaluation)
+            print(board.min_number_of_moves())
             key = input("Press w/a/s/d: ")
             board.input_handle(key)
 

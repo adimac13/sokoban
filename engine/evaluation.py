@@ -27,6 +27,22 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
         second = i[1]
         if first[0] != second [0] and first[1] != second[1]:
             return 1
+    elif len(i) == 1:
+        obs = list(i)[0]
+        if new_box_pos[1] == obs[1]:
+            pos_to_check = [(obs[0], obs[1] - 1), (obs[0], obs[1] + 1)]
+            detected_obs = set(pos_to_check) & (set(other_boxes_pos) | set(obstacles_pos))
+            if len(detected_obs) > 0:
+                for new_obs in detected_obs:
+                    new_pos_to_check = (new_box_pos[0], new_obs[1])
+                    if new_pos_to_check in (set(other_boxes_pos) | set(obstacles_pos)): return 1
+        else:
+            pos_to_check = [(obs[0] - 1, obs[1]), (obs[0] + 1, obs[1])]
+            detected_obs = set(pos_to_check) & (set(other_boxes_pos) | set(obstacles_pos))
+            if len(detected_obs) > 0:
+                for new_obs in detected_obs:
+                    new_pos_to_check = (new_obs[0], new_box_pos[1])
+                    if new_pos_to_check in (set(other_boxes_pos) | set(obstacles_pos)): return 1
 
 
     # Box locked by other boxes
@@ -41,7 +57,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
             if first[0] == second[0] or first[1] == second[1]:
                 return 0
             pos_to_check = [(first[0], second[1]), (first[1], second[0])]
-            if len(set(other_boxes_pos) & set(pos_to_check)):
+            if len((set(other_boxes_pos) | set(obstacles_pos)) & set(pos_to_check)):
                 return 1
         else:
             # There are 3 boxes around the moved box
@@ -74,14 +90,22 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
                 else: # second[0] == third [0]
                     boxes_to_check = [(second[0], first[1]), (third[0], first[1])]
 
-            if len(set(boxes_to_check) & set(other_boxes_pos)):
+            if len(set(boxes_to_check) & (set(other_boxes_pos) | set(obstacles_pos))):
                 return 1
 
-    """
-    TODO
-    add detecting such situation:
-    --OO--
-    --BB--
-    """
-
     return 0
+
+def heuristic_evaluation(boxes_pos, goals_pos, all_permutations):
+    min_dist = float('inf')
+    for j, perm in enumerate(all_permutations):
+        dist = 0
+        for i,box in enumerate(boxes_pos):
+            goal = goals_pos[perm[i]]
+            dist += abs(box[0] - goal[0]) + abs(box[1] - goal[1])
+
+        min_dist = min(dist, min_dist)
+
+    return min_dist
+
+if __name__ == "__main__":
+    pass
