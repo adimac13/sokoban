@@ -97,6 +97,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
 
 def heuristic_evaluation(boxes_pos, goals_pos, all_permutations):
     min_dist = float('inf')
+    goals_pos = list(goals_pos)
     for j, perm in enumerate(all_permutations):
         dist = 0
         for i,box in enumerate(boxes_pos):

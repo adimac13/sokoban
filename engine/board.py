@@ -4,15 +4,18 @@ import json
 from pathlib import Path
 from evaluation import find_deadlocks, heuristic_evaluation
 from itertools import permutations
+from a_star_algorithm import find_shortest_path
+import time
 
 class Board:
-    def __init__(self, grid_size = 12, num_of_boxes = 4, num_of_obstacles = 10, json_path = None):
+    def __init__(self, grid_size = 7, num_of_boxes = 3, num_of_obstacles = 5, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
         self.num_of_undo = 0
         self.num_of_redo = 0
         self.evaluation = None
+        self.final_cmd = None
 
         # Setting all permutations at the beginning for faster heuristic evaluation
         self.all_permutations = list(permutations(range(num_of_boxes)))
@@ -99,6 +102,9 @@ class Board:
             return
         elif key.lower() == 'j':
             self._save_to_json(path)
+            return
+        elif key.lower() == 'm':
+            self.final_cmd = self._optimal_path()
             return
         else: return
 
@@ -193,6 +199,9 @@ class Board:
         with open(str(saving_path), "w") as f:
             json.dump(data, f)
 
+    def _optimal_path(self):
+        return find_shortest_path(self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size)
+
     def status(self):
         # 1 if all boxes are on goal positions, else 0
         i = set(self.boxes_pos) & set(self.goals_pos)
@@ -238,6 +247,17 @@ def sokoban_terminal():
             print(board.min_number_of_moves())
             key = input("Press w/a/s/d: ")
             board.input_handle(key)
+
+            if key.lower() == 'm':
+                final_cmd = board.final_cmd
+
+                for cmd in final_cmd:
+                    p, b, g, o = board.get_positions()
+                    draw_board(p, b, g, o, board.grid_size)
+                    board.input_handle(cmd)
+                    time.sleep(1)
+
+                break
 
 
 
