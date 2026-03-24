@@ -8,7 +8,7 @@ from a_star_algorithm import find_shortest_path
 import time
 
 class Board:
-    def __init__(self, grid_size = 15, num_of_boxes = 2, num_of_obstacles = 0, json_path = None):
+    def __init__(self, grid_size = 5, num_of_boxes = 2, num_of_obstacles = 0, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
@@ -37,9 +37,9 @@ class Board:
             # Randomly chooses positions of goals
             self.goals_pos = []
             for i in range(num_of_boxes):
-                pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
+                pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
                 while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
-                    pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
+                    pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
                 self.goals_pos.append(pos)
 
             # Randomly chooses positions of obstacles
@@ -245,6 +245,7 @@ def sokoban_terminal():
             break
         else:
             print(board.min_number_of_moves())
+            print(board.evaluation)
             key = input("Press w/a/s/d: ")
             board.input_handle(key)
 

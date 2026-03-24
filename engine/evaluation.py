@@ -1,4 +1,3 @@
-#TODO fix evaluation: goal in the corner, evaluation based on the distance from the nearest box
 def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size):
     """
     Returns 1 if deadlock, 0 if not found.
@@ -8,9 +7,42 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
     if new_box_pos in goals_pos:
         return 0
 
-    # Box in the corner or edge
-    if new_box_pos[0] == 0 or new_box_pos[0] == size - 1 or new_box_pos[1] == 0 or new_box_pos[1] == size - 1:
+    # Box in the corner
+    if (new_box_pos[0] == 0 or new_box_pos[0] == size - 1) and (new_box_pos[1] == 0 or new_box_pos[1] == size - 1):
         return 1
+
+    # Box on the edge
+    goal_on_edge = False
+    box_on_edge = False
+
+    if new_box_pos[0] == 0:
+        box_on_edge = True
+        for goal in goals_pos:
+            if goal[0] == 0:
+                goal_on_edge = True
+                break
+    elif new_box_pos[0] == size - 1:
+        box_on_edge = True
+        for goal in goals_pos:
+            if goal[0] == size - 1:
+                goal_on_edge = True
+                break
+    elif new_box_pos[1] == 0:
+        box_on_edge = True
+        for goal in goals_pos:
+            if goal[1] == 1:
+                goal_on_edge = True
+                break
+    elif new_box_pos[1] == size - 1:
+        box_on_edge = True
+        for goal in goals_pos:
+            if goal[1] == size - 1:
+                goal_on_edge = True
+                break
+
+    if not goal_on_edge and box_on_edge:
+        return 1
+
 
     # Positions to check around the box
     p = new_box_pos
