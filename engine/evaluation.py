@@ -1,3 +1,4 @@
+#TODO fix evaluation: goal in the corner, evaluation based on the distance from the nearest box
 def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size):
     """
     Returns 1 if deadlock, 0 if not found.
@@ -95,7 +96,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
 
     return 0
 
-def heuristic_evaluation(boxes_pos, goals_pos, all_permutations):
+def heuristic_evaluation(player_pos, boxes_pos, goals_pos, all_permutations):
     min_dist = float('inf')
     goals_pos = list(goals_pos)
     for j, perm in enumerate(all_permutations):
@@ -106,7 +107,13 @@ def heuristic_evaluation(boxes_pos, goals_pos, all_permutations):
 
         min_dist = min(dist, min_dist)
 
-    return min_dist
+    if not min_dist: return min_dist
+
+    min_dist_player = float('inf')
+    for box in boxes_pos:
+        min_dist_player = min(min_dist_player, (abs(player_pos[0] - box[0]) + abs(player_pos[1] - box[1])))
+
+    return min_dist + min_dist_player / 10
 
 if __name__ == "__main__":
     pass

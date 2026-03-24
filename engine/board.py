@@ -8,7 +8,7 @@ from a_star_algorithm import find_shortest_path
 import time
 
 class Board:
-    def __init__(self, grid_size = 7, num_of_boxes = 3, num_of_obstacles = 5, json_path = None):
+    def __init__(self, grid_size = 15, num_of_boxes = 2, num_of_obstacles = 0, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
@@ -37,9 +37,9 @@ class Board:
             # Randomly chooses positions of goals
             self.goals_pos = []
             for i in range(num_of_boxes):
-                pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
+                pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
                 while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
-                    pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
+                    pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
                 self.goals_pos.append(pos)
 
             # Randomly chooses positions of obstacles
@@ -210,7 +210,7 @@ class Board:
         return 0
 
     def min_number_of_moves(self):
-        return heuristic_evaluation(self.boxes_pos, self.goals_pos, self.all_permutations)
+        return heuristic_evaluation(self.player_pos, self.boxes_pos, self.goals_pos, self.all_permutations)
 
 # ------------------- TERMINAL HANDLE ---------------------
 
@@ -256,6 +256,9 @@ def sokoban_terminal():
                     draw_board(p, b, g, o, board.grid_size)
                     board.input_handle(cmd)
                     time.sleep(1)
+
+                p, b, g, o = board.get_positions()
+                draw_board(p, b, g, o, board.grid_size)
 
                 break
 
