@@ -8,7 +8,7 @@ from a_star_algorithm import find_shortest_path
 import time
 
 class Board:
-    def __init__(self, grid_size = 15, num_of_boxes = 2, num_of_obstacles = 0, json_path = None):
+    def __init__(self, grid_size = 6, num_of_boxes = 2, num_of_obstacles = 5, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
@@ -245,6 +245,7 @@ def sokoban_terminal():
             break
         else:
             print(board.min_number_of_moves())
+            print(board.evaluation)
             key = input("Press w/a/s/d: ")
             board.input_handle(key)
 
