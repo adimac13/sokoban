@@ -2,7 +2,7 @@ import heapq
 from itertools import permutations
 # from .state import State
 from .node import Node
-from evaluation import find_deadlocks, heuristic_evaluation
+from ..evaluation import find_deadlocks, heuristic_evaluation
 
 
 def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
@@ -58,12 +58,12 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
 
     if success:
         final_cmd = []
-        print("Route found")
+        # print("Route found")
         success_node.get_full_route(final_cmd)
         final_cmd.append(success_move)
         return final_cmd
     else:
-        print("Could not find route")
+        # print("Could not find route")
         return None
 
 

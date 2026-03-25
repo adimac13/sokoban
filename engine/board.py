@@ -2,13 +2,13 @@ from random import randint
 from collections import deque
 import json
 from pathlib import Path
-from evaluation import find_deadlocks, heuristic_evaluation
+from .evaluation import find_deadlocks, heuristic_evaluation
 from itertools import permutations
-from a_star_algorithm import find_shortest_path
+from .a_star_algorithm import find_shortest_path
 import time
 
 class Board:
-    def __init__(self, grid_size = 5, num_of_boxes = 2, num_of_obstacles = 0, json_path = None):
+    def __init__(self, grid_size = 6, num_of_boxes = 4, num_of_obstacles = 6, json_path = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
