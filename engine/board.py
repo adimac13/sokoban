@@ -212,6 +212,9 @@ class Board:
     def min_number_of_moves(self):
         return heuristic_evaluation(self.player_pos, self.boxes_pos, self.goals_pos, self.all_permutations)
 
+    def get_grid_size(self):
+        return self.grid_size
+
 # ------------------- TERMINAL HANDLE ---------------------
 
 def draw_board(player, boxes, goals, obstacles, size):

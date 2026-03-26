@@ -1,9 +1,12 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, \
+    QGridLayout, QSpinBox, QFileDialog, QMessageBox, QSlider, QFrame, QHBoxLayout
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap
 from engine.board import Board
 from enum import Enum
+from pathlib import Path
+from copy import copy
 
 class State(Enum):
     NORMAL = 1
@@ -23,10 +26,18 @@ class MainWindow(QMainWindow):
         self.game_screen = GameScreen(self)
         self.settings_screen = SettingsScreen(self)
 
+        self.grid_size = self.settings_screen.grid_size_final
+
         # 0 -> menu, 1 -> game, 2 -> settings
         self.stacked_widget.addWidget(self.menu_screen)
         self.stacked_widget.addWidget(self.game_screen)
         self.stacked_widget.addWidget(self.settings_screen)
+
+        # Creating game settings
+        self.grid_size = 8
+        self.num_of_boxes = 4
+        self.num_of_obstacles = 4
+        self.json_path = None
 
 
 class MenuScreen(QWidget):
@@ -43,8 +54,8 @@ class MenuScreen(QWidget):
 
         # Buttons
         btn_play = QPushButton("Play")
-        btn_settings = QPushButton("Settings")
         btn_exit = QPushButton("Exit")
+        btn_settings = QPushButton("Settings")
 
         for btn in (btn_play, btn_settings, btn_exit):
             btn.setFixedSize(200, 40)
@@ -62,7 +73,9 @@ class MenuScreen(QWidget):
 
     def go_to_game(self):
         # Setting idx for 1
-        self.parent.game_screen.setup_board(5)
+        self.parent.game_screen.setup_board(self.parent.settings_screen.grid_size_final, self.parent.settings_screen.num_of_boxes_final,
+                                            self.parent.settings_screen.num_of_obstacles_final, self.parent.settings_screen.selected_json_path_final)
+
         self.parent.stacked_widget.setCurrentIndex(1)
 
     def go_to_settings(self):
@@ -119,15 +132,17 @@ class GameScreen(QWidget):
 
         self.setLayout(main_layout)
 
-    def setup_board(self, grid_size):
+    def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path):
         self.state = State.NORMAL
         self.text_label.setText("Sokoban")
         self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white")
+
+        self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path)
+        self.grid_size = self.board.get_grid_size()
+
         for texture in self.texture_dict.keys():
-            self.texture_dict[texture] = self.texture_dict[texture].scaled(self.board_size // grid_size, self.board_size // grid_size,
+            self.texture_dict[texture] = self.texture_dict[texture].scaled(self.board_size // self.grid_size, self.board_size // self.grid_size,
                                                                    Qt.AspectRatioMode.KeepAspectRatio)
-        self.grid_size = grid_size
-        self.board = Board(grid_size = self.grid_size, json_path = '../engine/saved_boards/board_3.json')
         self.draw_board()
 
     def draw_board(self, key = None):
@@ -213,22 +228,106 @@ class GameScreen(QWidget):
     def back_to_menu(self):
         self.parent_window.stacked_widget.setCurrentIndex(0)
 
+
 class SettingsScreen(QWidget):
     def __init__(self, parent_window):
         super().__init__()
         self.parent_window = parent_window
-
         main_layout = QVBoxLayout()
+        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(40, 0, 40, 0)
 
-        self.grid_layout = QGridLayout()
+        title = QLabel("Settings")
+        title.setStyleSheet("font-size: 28px; font-weight: bold; margin-bottom: 20px")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_layout.addWidget(title)
+
+        self.grid_size_slider, self.grid_size_val = self.create_slider_row(main_layout, "Grid size:", 3, 12, 5)
+        self.boxes_slider, self.boxes_val = self.create_slider_row(main_layout, "Number of boxes:", 1, 10, 3)
+        self.obstacles_slider, self.obstacles_val = self.create_slider_row(main_layout, "Number of obstacles:", 0, 20,5)
+
+        # Creating frame for selecting json file
+        file_frame = QFrame()
+        file_layout = QHBoxLayout(file_frame)
+        self.file_label = QLabel("No JSON file selected")
+        self.file_label.setStyleSheet("color: #aaaaaa;")
+
+        btn_select_file = QPushButton("Browse JSON")
+        btn_select_file.setFixedWidth(100)
+        btn_select_file.clicked.connect(self.handle_file_selection)
+
+        map_label = QLabel("Loaded map:")
+
+        file_layout.addWidget(map_label)
+        file_layout.addWidget(self.file_label, stretch=1)
+        file_layout.addWidget(btn_select_file)
+        main_layout.addWidget(file_frame)
+
+        main_layout.addStretch()
+
+        bottom_layout = QHBoxLayout()
+        btn_apply = QPushButton("Apply")
+        btn_apply.clicked.connect(self.apply_settings)
 
         btn_back = QPushButton("Back to menu")
-        btn_back.setFixedSize(150, 40)
         btn_back.clicked.connect(self.back_to_menu)
 
-        main_layout.addLayout(self.grid_layout)
-        main_layout.addWidget(btn_back, alignment=Qt.AlignmentFlag.AlignCenter)
+        bottom_layout.addWidget(btn_back)
+        bottom_layout.addWidget(btn_apply)
+        main_layout.addLayout(bottom_layout)
+
         self.setLayout(main_layout)
+
+        # Setting initial values for game settings
+        self.grid_size_final = copy(self.grid_size_slider.value())
+        self.num_of_boxes_final = copy(self.boxes_slider.value())
+        self.num_of_obstacles_final = copy(self.obstacles_slider.value())
+        self.selected_json_path_final = None
+        self.selected_json_path = None
+
+    def create_slider_row(self, parent_layout, label_text, min_val, max_val, default_val):
+        frame = QFrame()
+        layout = QHBoxLayout(frame)
+
+        name_label = QLabel(label_text)
+        name_label.setFixedWidth(150)
+
+        slider = QSlider(Qt.Orientation.Horizontal)
+        slider.setRange(min_val, max_val)
+        slider.setValue(default_val)
+
+        val_label = QLabel(str(default_val))
+        val_label.setFixedWidth(30)
+        val_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        val_label.setStyleSheet("font-weight: bold; color: #5c9ce6")
+
+        slider.valueChanged.connect(lambda v, l=val_label: l.setText(str(v)))
+
+        layout.addWidget(name_label)
+        layout.addWidget(slider)
+        layout.addWidget(val_label)
+
+        parent_layout.addWidget(frame)
+        return slider, val_label
+
+    def handle_file_selection(self):
+        selected_file, _ = QFileDialog.getOpenFileName(self, "Choose map", "", "JSON Files (*.json);;All Files (*)")
+
+        if selected_file:
+            selected_path = Path(selected_file)
+            if not selected_path.suffix == '.json':
+                QMessageBox.warning(self, "Wrong file extension", "Choose .json file.")
+                self.file_label.setText("No JSON file selected")
+                self.selected_json_path = None
+            else:
+                self.file_label.setText(selected_path.name)
+                self.selected_json_path = selected_path
+
+    def apply_settings(self):
+        self.grid_size_final = self.grid_size_slider.value()
+        self.num_of_boxes_final = self.boxes_slider.value()
+        self.num_of_obstacles_final = self.obstacles_slider.value()
+        self.selected_json_path_final = self.selected_json_path
 
     def back_to_menu(self):
         self.parent_window.stacked_widget.setCurrentIndex(0)

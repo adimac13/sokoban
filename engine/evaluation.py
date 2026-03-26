@@ -30,7 +30,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
     elif new_box_pos[1] == 0:
         box_on_edge = True
         for goal in goals_pos:
-            if goal[1] == 1:
+            if goal[1] == 0:
                 goal_on_edge = True
                 break
     elif new_box_pos[1] == size - 1:
