@@ -191,7 +191,6 @@ class Board:
             "size" : self.grid_size
         }
 
-        path /= 'saved_boards'
         path.mkdir(exist_ok=True, parents=True)
 
         num_of_files = len(list(path.glob('*board*')))

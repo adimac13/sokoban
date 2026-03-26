@@ -1,7 +1,9 @@
 import sys
+
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, \
     QGridLayout, QFileDialog, QMessageBox, QSlider, QFrame, QHBoxLayout
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QUrl
 from PyQt6.QtGui import QPixmap, QPainter
 from engine.board import Board
 from enum import Enum
@@ -39,6 +41,15 @@ class MainWindow(QMainWindow):
         self.num_of_obstacles = 4
         self.json_path = None
 
+        # Setting up soundtrack
+        self.player = QMediaPlayer()
+        self.audio_output = QAudioOutput()
+        self.player.setAudioOutput(self.audio_output)
+        self.player.setSource(QUrl.fromLocalFile("./sokoban-assets/soundtrack/soundtrack.mp3"))
+        self.audio_output.setVolume(0.2)
+        self.player.setLoops(-1)
+        self.player.play()
+
 
 class MenuScreen(QWidget):
     def __init__(self, parent):
@@ -49,7 +60,7 @@ class MenuScreen(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title = QLabel("Sokoban")
-        title.setStyleSheet("font-size: 34px; font-weight: bold")
+        title.setStyleSheet("font-size: 34px; font-weight: bold; font-family: 'Courier New', monospace;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Buttons
@@ -90,14 +101,14 @@ class GameScreen(QWidget):
 
         # Creating dict so that it can be later modified
         self.texture_dict = {
-            "ground_texture" : QPixmap("../sokoban-assets/environment/ground.png"),
-            "box_texture" : QPixmap("../sokoban-assets/environment/box.png"),
-            "goal_texture" : QPixmap("../sokoban-assets/environment/goal.png"),
-            "obstacle_texture" : QPixmap("../sokoban-assets/environment/obstacle.png"),
-            "player_down_texture" : QPixmap("../sokoban-assets/player/down.png"),
-            "player_left_texture" : QPixmap("../sokoban-assets/player/left.png"),
-            "player_right_texture" : QPixmap("../sokoban-assets/player/right.png"),
-            "player_up_texture" : QPixmap("../sokoban-assets/player/up.png")
+            "ground_texture" : QPixmap("./sokoban-assets/environment/ground.png"),
+            "box_texture" : QPixmap("./sokoban-assets/environment/box.png"),
+            "goal_texture" : QPixmap("./sokoban-assets/environment/goal.png"),
+            "obstacle_texture" : QPixmap("./sokoban-assets/environment/obstacle.png"),
+            "player_down_texture" : QPixmap("./sokoban-assets/player/down.png"),
+            "player_left_texture" : QPixmap("./sokoban-assets/player/left.png"),
+            "player_right_texture" : QPixmap("./sokoban-assets/player/right.png"),
+            "player_up_texture" : QPixmap("./sokoban-assets/player/up.png")
         }
 
         self.board_size = 300
@@ -108,42 +119,81 @@ class GameScreen(QWidget):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.text_label = QLabel("")
-        self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white")
+        self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
         self.text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.instruction_label = QLabel(
+            "<span style='color: lightgray;'>[W/A/S/D]</span> Move ‎ ‎ •‎ ‎  "
+            "<span style='color: lightgray;'>[U]</span> Undo ‎ ‎ •‎ ‎  "
+            "<span style='color: lightgray;'>[R]</span> Redo ‎ ‎ •‎ ‎"
+            "<span style='color: lightgray;'>[P]</span> Reset ‎ ‎ •‎ ‎"
+            "<span style='color: lightgray;'>[M]</span> Solve"
+        )
+        self.instruction_label.setStyleSheet("font-size: 15px; font-weight: bold; color: gray;")
+        self.instruction_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(0)
         self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.stats_label = QLabel("")
+        self.stats_label.setStyleSheet("font-size: 18px; font-weight: bold; color: green")
+        self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Back button
         btn_back = QPushButton("Back to menu")
         btn_back.setFixedSize(150, 40)
         btn_back.clicked.connect(self.back_to_menu)
 
+        # Json Button
+        btn_json = QPushButton("Save map")
+        btn_json.setFixedSize(150, 40)
+        btn_json.clicked.connect(self.get_path)
+
         # Adding text to layout
         main_layout.addWidget(self.text_label)
 
+        # Adding instruction to layout
+        main_layout.addWidget(self.instruction_label)
         # Adding grid to layout
         main_layout.addLayout(self.grid_layout)
 
-        # Padding for button
+        # Adding stats to layout
+        main_layout.addWidget(self.stats_label)
+
+        # Adding button to save json
         main_layout.addSpacing(20)
+        main_layout.addWidget(btn_json, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Padding for button
         main_layout.addWidget(btn_back, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.setLayout(main_layout)
 
+    def get_path(self):
+        path = QFileDialog.getExistingDirectory(self, "Choose place to save")
+        if path:
+            self.board.input_handle('j', path = Path(path))
+
     def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path):
         self.state = State.NORMAL
         self.text_label.setText("Sokoban")
-        self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white")
+        self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
 
         self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path)
         self.grid_size = self.board.get_grid_size()
+        self.update_stats()
 
+        # Scaling textures for proper viewing
         for texture in self.texture_dict.keys():
             self.texture_dict[texture] = self.texture_dict[texture].scaled(self.board_size // self.grid_size, self.board_size // self.grid_size,
                                                                    Qt.AspectRatioMode.KeepAspectRatio)
         self.draw_board()
+
+    def update_stats(self):
+        moves, undo, redo = self.board.get_stats()
+        self.stats_label.setText(f'Moves: {moves:03} ‎ ‎ ‎ ‎  <span style="color: lightgreen;">'
+                                 f'Undo: {undo}</span> ‎ ‎ ‎ ‎ Redo: {redo}')
 
     def draw_board(self, key = None):
         # Cleaning old board
@@ -187,6 +237,7 @@ class GameScreen(QWidget):
 
 
                 self.grid_layout.addWidget(cell, row, col)
+        self.update_stats()
 
     def keyPressEvent(self, event):
         if self.state == State.NORMAL:
@@ -213,6 +264,9 @@ class GameScreen(QWidget):
                 self.draw_board()
             elif event.key() == Qt.Key.Key_M:
                 self.board.input_handle('m')
+                self.board.num_of_moves = 0
+                self.board.num_of_redo = 0
+                self.board.num_of_undo = 0
                 self.final_cmd = self.board.final_cmd
                 self.a_star_solver()
 
@@ -220,17 +274,17 @@ class GameScreen(QWidget):
         if self.board.status():
             self.state = State.WIN
             self.text_label.setText("Win")
-            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green")
+            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green; font-family: 'Courier New', monospace;")
         elif self.board.evaluation:
             self.text_label.setText("Deadlock")
-            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: red")
+            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: red; font-family: 'Courier New', monospace;")
 
     def a_star_solver(self):
         move = self.final_cmd.pop(0)
         self.board.input_handle(move)
         self.draw_board(move)
         if len(self.final_cmd):
-            QTimer.singleShot(1000, self.a_star_solver)
+            QTimer.singleShot(400, self.a_star_solver)
         else:
             self.state = State.WIN
             self.text_label.setText("Win")
@@ -276,16 +330,28 @@ class SettingsScreen(QWidget):
 
         main_layout.addStretch()
 
+
+        # Bottom layout
         bottom_layout = QHBoxLayout()
         btn_apply = QPushButton("Apply")
         btn_apply.clicked.connect(self.apply_settings)
+        btn_apply.setFixedSize(150, 40)
 
         btn_back = QPushButton("Back to menu")
         btn_back.clicked.connect(self.back_to_menu)
+        btn_back.setFixedSize(150, 40)
+
+        self.btn_mute = QPushButton("Mute")
+        self.btn_mute.setFixedSize(150, 40)
+        self.btn_mute.setStyleSheet("background-color: #e87474;")
+        self.btn_mute.clicked.connect(self.change_volume)
 
         bottom_layout.addWidget(btn_back)
         bottom_layout.addWidget(btn_apply)
+        bottom_layout.addWidget(self.btn_mute)
+
         main_layout.addLayout(bottom_layout)
+        main_layout.addSpacing(300)
 
         self.setLayout(main_layout)
 
@@ -295,6 +361,20 @@ class SettingsScreen(QWidget):
         self.num_of_obstacles_final = copy(self.obstacles_slider.value())
         self.selected_json_path_final = None
         self.selected_json_path = None
+
+    def change_volume(self):
+        current_style = self.btn_mute.styleSheet()
+
+        if current_style == "background-color: #e87474;":
+            self.btn_mute.setText("Unmute")
+            self.btn_mute.setStyleSheet("background-color: green;")
+            self.parent_window.audio_output.setVolume(0.0)
+        else:
+            self.btn_mute.setText("Mute")
+            self.btn_mute.setStyleSheet("background-color: #e87474;")
+            self.parent_window.audio_output.setVolume(0.2)
+
+
 
     def create_slider_row(self, parent_layout, label_text, min_val, max_val, default_val):
         frame = QFrame()
@@ -344,7 +424,4 @@ class SettingsScreen(QWidget):
         self.parent_window.stacked_widget.setCurrentIndex(0)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    pass
