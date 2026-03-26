@@ -1,8 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, \
-    QGridLayout, QSpinBox, QFileDialog, QMessageBox, QSlider, QFrame, QHBoxLayout
+    QGridLayout, QFileDialog, QMessageBox, QSlider, QFrame, QHBoxLayout
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QPainter
 from engine.board import Board
 from enum import Enum
 from pathlib import Path
@@ -162,19 +162,30 @@ class GameScreen(QWidget):
                 cell.setFixedSize(self.board_size // self.grid_size, self.board_size // self.grid_size)
                 cell.setStyleSheet("border: 1px solid darkgray;")
 
-                cell.setPixmap(self.texture_dict["ground_texture"])
-                if current_pos == player_pos:
-                    if key is None or key == 's': cell.setPixmap(self.texture_dict["player_down_texture"])
-                    elif key == 'w': cell.setPixmap(self.texture_dict["player_up_texture"])
-                    elif key == 'a': cell.setPixmap(self.texture_dict["player_left_texture"])
-                    elif key == 'd': cell.setPixmap(self.texture_dict["player_right_texture"])
 
-                elif current_pos in boxes_pos:
+
+                if current_pos in boxes_pos:
                     cell.setPixmap(self.texture_dict["box_texture"])
                 elif current_pos in goals_pos:
                     cell.setPixmap(self.texture_dict["goal_texture"])
+                    curr_texture = self.texture_dict["goal_texture"]
                 elif current_pos in obstacles_pos:
                     cell.setPixmap(self.texture_dict["obstacle_texture"])
+                else:
+                    cell.setPixmap(self.texture_dict["ground_texture"])
+                    curr_texture = self.texture_dict["ground_texture"]
+
+                if current_pos == player_pos:
+                    combined = curr_texture.copy()
+                    painter = QPainter(combined)
+                    if key is None or key == 's': painter.drawPixmap(0,0, self.texture_dict["player_down_texture"])
+                    elif key == 'w': painter.drawPixmap(0,0, self.texture_dict["player_up_texture"])
+                    elif key == 'a': painter.drawPixmap(0,0, self.texture_dict["player_left_texture"])
+                    elif key == 'd': painter.drawPixmap(0,0, self.texture_dict["player_right_texture"])
+                    painter.end()
+                    cell.setPixmap(combined)
+
+
                 self.grid_layout.addWidget(cell, row, col)
 
     def keyPressEvent(self, event):
@@ -242,7 +253,7 @@ class SettingsScreen(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title)
 
-        self.grid_size_slider, self.grid_size_val = self.create_slider_row(main_layout, "Grid size:", 3, 12, 5)
+        self.grid_size_slider, self.grid_size_val = self.create_slider_row(main_layout, "Grid size:", 3, 12, 6)
         self.boxes_slider, self.boxes_val = self.create_slider_row(main_layout, "Number of boxes:", 1, 10, 3)
         self.obstacles_slider, self.obstacles_val = self.create_slider_row(main_layout, "Number of obstacles:", 0, 20,5)
 
