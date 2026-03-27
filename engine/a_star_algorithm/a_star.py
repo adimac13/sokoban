@@ -53,17 +53,12 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
         if success:
             break
 
-        # i += 1
-        # if not i%1000:print("a")
-
     if success:
         final_cmd = []
-        # print("Route found")
         success_node.get_full_route(final_cmd)
         final_cmd.append(success_move)
         return final_cmd
     else:
-        # print("Could not find route")
         return None
 
 

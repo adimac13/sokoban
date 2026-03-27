@@ -132,6 +132,14 @@ class GameScreen(QWidget):
         self.instruction_label.setStyleSheet("font-size: 15px; font-weight: bold; color: gray;")
         self.instruction_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self.timer_label = QLabel("")
+        self.timer_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.timer_label.setStyleSheet("font-size: 22px; font-weight: bold; color: white;")
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_display)
+        self.elapsed_time = 0
+
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(0)
         self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -159,6 +167,10 @@ class GameScreen(QWidget):
 
         # Adding instruction to layout
         main_layout.addWidget(self.instruction_label)
+
+        # Adding timer to layout
+        main_layout.addWidget(self.timer_label)
+
         # Adding grid to layout
         main_layout.addLayout(self.grid_layout)
 
@@ -182,6 +194,13 @@ class GameScreen(QWidget):
         if path:
             self.board.input_handle('j', path = Path(path))
 
+
+    def update_display(self):
+        self.elapsed_time += 1
+        minutes = self.elapsed_time // 60
+        seconds = self.elapsed_time % 60
+        self.timer_label.setText(f"{minutes:02}:{seconds:02}")
+
     def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path):
         self.state = State.NORMAL
         self.text_label.setText("Sokoban")
@@ -190,6 +209,10 @@ class GameScreen(QWidget):
         self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path)
         self.grid_size = self.board.get_grid_size()
         self.update_stats()
+
+        self.elapsed_time = 0
+        self.timer_label.setText("00:00")
+        self.timer.start(1000)
 
         # Scaling textures for proper viewing
         for texture in self.texture_dict.keys():
@@ -211,6 +234,7 @@ class GameScreen(QWidget):
         if self.board.status():
             self.state = State.WIN
             self.text_label.setText("Win")
+            self.timer.stop()
             self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green; font-family: 'Courier New', monospace;")
         else:
             self.text_label.setText("Sokoban")
@@ -306,6 +330,7 @@ class GameScreen(QWidget):
 
             elif event.key() == Qt.Key.Key_P:
                 self.board.input_handle('p')
+                self.elapsed_time = 0
                 self.draw_board()
             elif event.key() == Qt.Key.Key_M:
                 self.board.input_handle('m')
@@ -315,9 +340,12 @@ class GameScreen(QWidget):
                     self.board.num_of_redo = 0
                     self.board.num_of_undo = 0
                     self.final_cmd = self.board.final_cmd
-                    self.a_star_solver()
+                    if self.final_cmd is not None:
+                        self.a_star_solver()
+                    else:
+                        QMessageBox.warning(self, "Error", "Could not find any route.")
                 else:
-                    QMessageBox.warning(self, "Deadlock detected", "Could not find route, because deadlock is detected.")
+                    QMessageBox.warning(self, "Error", "Could not find route, because deadlock is detected.")
 
     def a_star_solver(self):
         move = self.final_cmd.pop(0)
@@ -331,6 +359,7 @@ class GameScreen(QWidget):
             self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green")
 
     def back_to_menu(self):
+        self.timer.stop()
         self.parent_window.stacked_widget.setCurrentIndex(0)
 
 
