@@ -376,7 +376,7 @@ class SettingsScreen(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title)
 
-        self.grid_size_slider, self.grid_size_val = self.create_slider_row(main_layout, "Grid size:", 3, 12, 6)
+        self.grid_size_slider, self.grid_size_val = self.create_slider_row(main_layout, "Grid size:", 4, 12, 6)
         self.boxes_slider, self.boxes_val = self.create_slider_row(main_layout, "Number of boxes:", 1, 10, 3)
         self.obstacles_slider, self.obstacles_val = self.create_slider_row(main_layout, "Number of obstacles:", 0, 20,5)
 
