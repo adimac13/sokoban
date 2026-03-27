@@ -25,29 +25,32 @@ class Board:
             self.num_of_boxes = num_of_boxes
             self.num_of_obstacles = num_of_obstacles
 
+            self.evaluation = 1
             # Randomly chooses position of boxes
-            self.boxes_pos = []
-            for i in range(num_of_boxes):
-                pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
-                while pos == self.player_pos or pos in self.boxes_pos:
+            while self.evaluation:
+                self.boxes_pos = []
+                for i in range(num_of_boxes):
                     pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
-                self.boxes_pos.append(pos)
+                    while pos == self.player_pos or pos in self.boxes_pos:
+                        pos = (randint(1, grid_size - 2), randint(1, grid_size - 2))
+                    self.boxes_pos.append(pos)
 
-            # Randomly chooses positions of goals
-            self.goals_pos = []
-            for i in range(num_of_boxes):
-                pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-                while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
+                # Randomly chooses positions of goals
+                self.goals_pos = []
+                for i in range(num_of_boxes):
                     pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-                self.goals_pos.append(pos)
+                    while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos:
+                        pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
+                    self.goals_pos.append(pos)
 
-            # Randomly chooses positions of obstacles
-            self.obstacles_pos = []
-            for i in range(num_of_obstacles):
-                pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-                while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos or pos in self.obstacles_pos:
+                # Randomly chooses positions of obstacles
+                self.obstacles_pos = []
+                for i in range(num_of_obstacles):
                     pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
-                self.obstacles_pos.append(pos)
+                    while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos or pos in self.obstacles_pos:
+                        pos = (randint(0, grid_size - 1), randint(0, grid_size - 1))
+                    self.obstacles_pos.append(pos)
+                self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
         else:
             with open(str(json_path), 'r') as f:
                 self.boxes_pos = []

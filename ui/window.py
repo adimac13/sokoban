@@ -331,6 +331,7 @@ class GameScreen(QWidget):
             elif event.key() == Qt.Key.Key_P:
                 self.board.input_handle('p')
                 self.elapsed_time = 0
+                self.timer_label.setText("00:00")
                 self.draw_board()
             elif event.key() == Qt.Key.Key_M:
                 self.board.input_handle('m')
@@ -350,6 +351,7 @@ class GameScreen(QWidget):
             if event.key() == Qt.Key.Key_P:
                 self.board.input_handle('p')
                 self.elapsed_time = 0
+                self.timer_label.setText("00:00")
                 self.timer.start(1000)
                 self.state = State.NORMAL
                 self.draw_board()
