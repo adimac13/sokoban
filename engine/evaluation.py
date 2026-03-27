@@ -128,6 +128,16 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
 
     return 0
 
+def evaluate_board(boxes_pos, obstacles_pos, goals_pos, size):
+    """
+    Returns 1 if any deadlock found, else 0
+    """
+    for box in boxes_pos:
+        other_boxes = [b for b in boxes_pos if b!=box]
+        if find_deadlocks(box, other_boxes, obstacles_pos, goals_pos, size):
+            return 1
+    return 0
+
 def heuristic_evaluation(player_pos, boxes_pos, goals_pos, all_permutations):
     min_dist = float('inf')
     goals_pos = list(goals_pos)

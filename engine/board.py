@@ -2,7 +2,7 @@ from random import randint
 from collections import deque
 import json
 from pathlib import Path
-from .evaluation import find_deadlocks, heuristic_evaluation
+from .evaluation import find_deadlocks, heuristic_evaluation, evaluate_board
 from itertools import permutations
 from .a_star_algorithm import find_shortest_path
 import time
@@ -14,7 +14,6 @@ class Board:
         self.num_of_moves = 0
         self.num_of_undo = 0
         self.num_of_redo = 0
-        self.evaluation = None
         self.final_cmd = None
 
         # Setting all permutations at the beginning for faster heuristic evaluation
@@ -78,6 +77,7 @@ class Board:
 
         # Saving initial position for reset
         self.initial_pos = [self.player_pos, self.boxes_pos.copy()]
+        self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
 
 
     def get_positions(self):
@@ -93,9 +93,11 @@ class Board:
         elif key.lower() == 'd': vec = [0, 1]   # going right
         elif key.lower() == 'u':
             self._undo_handle()
+            self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
             return
         elif key.lower() == 'r':
             self._redo_handle()
+            self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
             return
         elif key.lower() == 'p':
             self._reset_handle()

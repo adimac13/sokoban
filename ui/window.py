@@ -140,6 +140,10 @@ class GameScreen(QWidget):
         self.stats_label.setStyleSheet("font-size: 18px; font-weight: bold; color: green")
         self.stats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        self.deadlock_label = QLabel("")
+        self.deadlock_label.setStyleSheet("font-size: 18px; font-weight: bold; color: gray")
+        self.deadlock_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         # Back button
         btn_back = QPushButton("Back to menu")
         btn_back.setFixedSize(150, 40)
@@ -160,6 +164,9 @@ class GameScreen(QWidget):
 
         # Adding stats to layout
         main_layout.addWidget(self.stats_label)
+
+        # Adding deadlock label to layout
+        main_layout.addWidget(self.deadlock_label)
 
         # Adding button to save json
         main_layout.addSpacing(20)
@@ -195,14 +202,20 @@ class GameScreen(QWidget):
         self.stats_label.setText(f'Moves: {moves:03} ‎ ‎ ‎ ‎  <span style="color: lightgreen;">'
                                  f'Undo: {undo}</span> ‎ ‎ ‎ ‎ Redo: {redo}')
 
+        if self.board.evaluation:
+            self.deadlock_label.setText("Deadlock: Detected")
+        else:
+            self.deadlock_label.setText("Deadlock: Not detected")
+
         # If all boxes are on their positions
         if self.board.status():
             self.state = State.WIN
             self.text_label.setText("Win")
             self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green; font-family: 'Courier New', monospace;")
-        elif self.board.evaluation:
-            self.text_label.setText("Deadlock")
-            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: red; font-family: 'Courier New', monospace;")
+        else:
+            self.text_label.setText("Sokoban")
+            self.text_label.setStyleSheet(
+                "font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
 
 
     def draw_board(self, key = None):
@@ -296,11 +309,15 @@ class GameScreen(QWidget):
                 self.draw_board()
             elif event.key() == Qt.Key.Key_M:
                 self.board.input_handle('m')
-                self.board.num_of_moves = 0
-                self.board.num_of_redo = 0
-                self.board.num_of_undo = 0
-                self.final_cmd = self.board.final_cmd
-                self.a_star_solver()
+
+                if not self.board.evaluation:
+                    self.board.num_of_moves = 0
+                    self.board.num_of_redo = 0
+                    self.board.num_of_undo = 0
+                    self.final_cmd = self.board.final_cmd
+                    self.a_star_solver()
+                else:
+                    QMessageBox.warning(self, "Deadlock detected", "Could not find route, because deadlock is detected.")
 
     def a_star_solver(self):
         move = self.final_cmd.pop(0)
