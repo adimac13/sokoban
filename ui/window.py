@@ -346,6 +346,13 @@ class GameScreen(QWidget):
                         QMessageBox.warning(self, "Error", "Could not find any route.")
                 else:
                     QMessageBox.warning(self, "Error", "Could not find route, because deadlock is detected.")
+        elif self.state == State.WIN:
+            if event.key() == Qt.Key.Key_P:
+                self.board.input_handle('p')
+                self.elapsed_time = 0
+                self.timer.start(1000)
+                self.state = State.NORMAL
+                self.draw_board()
 
     def a_star_solver(self):
         move = self.final_cmd.pop(0)
