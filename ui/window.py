@@ -195,6 +195,16 @@ class GameScreen(QWidget):
         self.stats_label.setText(f'Moves: {moves:03} ‎ ‎ ‎ ‎  <span style="color: lightgreen;">'
                                  f'Undo: {undo}</span> ‎ ‎ ‎ ‎ Redo: {redo}')
 
+        # If all boxes are on their positions
+        if self.board.status():
+            self.state = State.WIN
+            self.text_label.setText("Win")
+            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green; font-family: 'Courier New', monospace;")
+        elif self.board.evaluation:
+            self.text_label.setText("Deadlock")
+            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: red; font-family: 'Courier New', monospace;")
+
+
     def draw_board(self, key = None):
         # Cleaning old board
         for i in reversed(range(self.grid_layout.count())):
@@ -254,11 +264,33 @@ class GameScreen(QWidget):
                 self.board.input_handle('d')
                 self.draw_board('d')
             elif event.key() == Qt.Key.Key_U:
+                bef_pos = self.board.player_pos
                 self.board.input_handle('u')
-                self.draw_board()
+                curr_pos = self.board.player_pos
+
+                if curr_pos[0] > bef_pos[0]:
+                    self.draw_board('w')
+                elif curr_pos[0] < bef_pos[0]:
+                    self.draw_board('s')
+                elif curr_pos[1] > bef_pos[1]:
+                    self.draw_board('a')
+                elif curr_pos[1] < bef_pos[1]:
+                    self.draw_board('d')
+
             elif event.key() == Qt.Key.Key_R:
+                bef_pos = self.board.player_pos
                 self.board.input_handle('r')
-                self.draw_board()
+                curr_pos = self.board.player_pos
+
+                if curr_pos[0] < bef_pos[0]:
+                    self.draw_board('w')
+                elif curr_pos[0] > bef_pos[0]:
+                    self.draw_board('s')
+                elif curr_pos[1] < bef_pos[1]:
+                    self.draw_board('a')
+                elif curr_pos[1] > bef_pos[1]:
+                    self.draw_board('d')
+
             elif event.key() == Qt.Key.Key_P:
                 self.board.input_handle('p')
                 self.draw_board()
@@ -269,15 +301,6 @@ class GameScreen(QWidget):
                 self.board.num_of_undo = 0
                 self.final_cmd = self.board.final_cmd
                 self.a_star_solver()
-
-        # If all boxes are on their positions
-        if self.board.status():
-            self.state = State.WIN
-            self.text_label.setText("Win")
-            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green; font-family: 'Courier New', monospace;")
-        elif self.board.evaluation:
-            self.text_label.setText("Deadlock")
-            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: red; font-family: 'Courier New', monospace;")
 
     def a_star_solver(self):
         move = self.final_cmd.pop(0)
