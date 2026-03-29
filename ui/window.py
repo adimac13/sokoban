@@ -357,15 +357,18 @@ class GameScreen(QWidget):
                 self.draw_board()
 
     def a_star_solver(self):
+        if self.parent_window.stacked_widget.currentIndex() != 1:
+            return
         move = self.final_cmd.pop(0)
         self.board.input_handle(move)
         self.draw_board(move)
         if len(self.final_cmd):
             QTimer.singleShot(400, self.a_star_solver)
         else:
-            self.state = State.WIN
-            self.text_label.setText("Win")
-            self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green")
+            pass
+            # self.state = State.WIN
+            # self.text_label.setText("Win")
+            # self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green")
 
     def back_to_menu(self):
         self.timer.stop()
@@ -392,17 +395,22 @@ class SettingsScreen(QWidget):
         # Creating frame for selecting json file
         file_frame = QFrame()
         file_layout = QHBoxLayout(file_frame)
-        self.file_label = QLabel("No JSON file selected")
+        self.file_label = QLabel("No JSON file selected.")
         self.file_label.setStyleSheet("color: #aaaaaa;")
 
         btn_select_file = QPushButton("Browse JSON")
         btn_select_file.setFixedWidth(100)
         btn_select_file.clicked.connect(self.handle_file_selection)
 
+        btn_remove_file = QPushButton("Remove JSON")
+        btn_remove_file.setFixedWidth(100)
+        btn_remove_file.clicked.connect(self.handle_file_remove)
+
         map_label = QLabel("Loaded map:")
 
         file_layout.addWidget(map_label)
         file_layout.addWidget(self.file_label, stretch=1)
+        file_layout.addWidget(btn_remove_file)
         file_layout.addWidget(btn_select_file)
         main_layout.addWidget(file_frame)
 
@@ -439,6 +447,13 @@ class SettingsScreen(QWidget):
         self.num_of_obstacles_final = copy(self.obstacles_slider.value())
         self.selected_json_path_final = None
         self.selected_json_path = None
+
+
+    def handle_file_remove(self):
+        self.selected_json_path = None
+        self.selected_json_path_final = None
+        self.file_label.setText("No JSON file selected.")
+        QMessageBox.information(self, "Done", "Successfully removed JSON.")
 
     def change_volume(self):
         current_style = self.btn_mute.styleSheet()
@@ -486,7 +501,7 @@ class SettingsScreen(QWidget):
             selected_path = Path(selected_file)
             if not selected_path.suffix == '.json':
                 QMessageBox.warning(self, "Wrong file extension", "Choose .json file.")
-                self.file_label.setText("No JSON file selected")
+                self.file_label.setText("No JSON file selected.")
                 self.selected_json_path = None
             else:
                 self.file_label.setText(selected_path.name)
@@ -498,8 +513,9 @@ class SettingsScreen(QWidget):
             self.num_of_boxes_final = self.boxes_slider.value()
             self.num_of_obstacles_final = self.obstacles_slider.value()
             self.selected_json_path_final = self.selected_json_path
+            QMessageBox.information(self, "Done", "Successfully applied.")
         else:
-            QMessageBox.warning(self, "Wrong settings", "Could not apply changes, because of wrong values.")
+            QMessageBox.warning(self, "Wrong settings", "Could not apply changes because of wrong values.")
 
     def back_to_menu(self):
         self.parent_window.stacked_widget.setCurrentIndex(0)
