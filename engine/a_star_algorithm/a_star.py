@@ -1,6 +1,5 @@
 import heapq
 from itertools import permutations
-# from .state import State
 from .node import Node
 from ..evaluation import find_deadlocks, heuristic_evaluation
 
@@ -19,8 +18,6 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
     heapq.heappush(pq, Node(None, state, 0, None, heuristic_evaluation(player_pos, boxes_pos, goals_pos, all_permutations)))
 
     success = False
-
-    i = 0
 
     while pq:
         node = heapq.heappop(pq)

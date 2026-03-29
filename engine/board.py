@@ -89,7 +89,7 @@ class Board:
     def get_stats(self):
         return self.num_of_moves, self.num_of_undo, self.num_of_redo
 
-    def input_handle(self, key, path = Path('./')):
+    def input_handle(self, key, path = Path('./'), game = False):
         if key.lower() == 'w': vec = [-1, 0]    # going up
         elif key.lower() == 's': vec = [1, 0]   # going down
         elif key.lower() == 'a': vec = [0, -1]  # going left
@@ -135,7 +135,11 @@ class Board:
 
                 # Evaluation
                 other_boxes_pos = [box for j,box in enumerate(self.boxes_pos) if j!=i]
-                self.evaluation = find_deadlocks(new_pos_box, other_boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
+
+                if not game:
+                    self.evaluation = find_deadlocks(new_pos_box, other_boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
+                else:
+                    self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
 
                 break
 

@@ -289,20 +289,20 @@ class GameScreen(QWidget):
     def keyPressEvent(self, event):
         if self.state == State.NORMAL:
             if event.key() == Qt.Key.Key_W:
-                self.board.input_handle('w')
+                self.board.input_handle('w', game=True)
                 self.draw_board('w')
             elif event.key() == Qt.Key.Key_S:
-                self.board.input_handle('s')
+                self.board.input_handle('s', game=True)
                 self.draw_board('s')
             elif event.key() == Qt.Key.Key_A:
-                self.board.input_handle('a')
+                self.board.input_handle('a', game=True)
                 self.draw_board('a')
             elif event.key() == Qt.Key.Key_D:
-                self.board.input_handle('d')
+                self.board.input_handle('d', game=True)
                 self.draw_board('d')
             elif event.key() == Qt.Key.Key_U:
                 bef_pos = self.board.player_pos
-                self.board.input_handle('u')
+                self.board.input_handle('u', game=True)
                 curr_pos = self.board.player_pos
 
                 if curr_pos[0] > bef_pos[0]:
@@ -316,7 +316,7 @@ class GameScreen(QWidget):
 
             elif event.key() == Qt.Key.Key_R:
                 bef_pos = self.board.player_pos
-                self.board.input_handle('r')
+                self.board.input_handle('r', game=True)
                 curr_pos = self.board.player_pos
 
                 if curr_pos[0] < bef_pos[0]:
@@ -329,12 +329,12 @@ class GameScreen(QWidget):
                     self.draw_board('d')
 
             elif event.key() == Qt.Key.Key_P:
-                self.board.input_handle('p')
+                self.board.input_handle('p', game=True)
                 self.elapsed_time = 0
                 self.timer_label.setText("00:00")
                 self.draw_board()
             elif event.key() == Qt.Key.Key_M:
-                self.board.input_handle('m')
+                self.board.input_handle('m', game=True)
 
                 if not self.board.evaluation:
                     self.board.num_of_moves = 0
