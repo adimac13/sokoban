@@ -89,7 +89,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
             second = i[1]
             if first[0] == second[0] or first[1] == second[1]:
                 return 0
-            pos_to_check = [(first[0], second[1]), (first[1], second[0])]
+            pos_to_check = [(first[0], second[1]), (second[0], first[1])]
             if len((set(other_boxes_pos) | set(obstacles_pos)) & set(pos_to_check)):
                 return 1
         else:
@@ -139,15 +139,24 @@ def evaluate_board(boxes_pos, obstacles_pos, goals_pos, size):
     return 0
 
 def heuristic_evaluation(player_pos, boxes_pos, goals_pos, all_permutations):
-    min_dist = float('inf')
-    goals_pos = list(goals_pos)
-    for j, perm in enumerate(all_permutations):
-        dist = 0
-        for i,box in enumerate(boxes_pos):
-            goal = goals_pos[perm[i]]
-            dist += abs(box[0] - goal[0]) + abs(box[1] - goal[1])
+    # slower but better
+    # min_dist = float('inf')
+    # goals_pos = list(goals_pos)
+    # for j, perm in enumerate(all_permutations):
+    #     dist = 0
+    #     for i,box in enumerate(boxes_pos):
+    #         goal = goals_pos[perm[i]]
+    #         dist += abs(box[0] - goal[0]) + abs(box[1] - goal[1])
+    #
+    #     min_dist = min(dist, min_dist)
 
-        min_dist = min(dist, min_dist)
+    # faster but worse
+    min_dist = 0
+    for box in boxes_pos:
+        curr_min_dist = float('inf')
+        for goal in goals_pos:
+            curr_min_dist = min(curr_min_dist, abs(box[0] - goal[0]) + abs(box[1] - goal[1]))
+        min_dist += curr_min_dist
 
     if not min_dist: return min_dist
 

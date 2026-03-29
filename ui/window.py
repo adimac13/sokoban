@@ -493,10 +493,13 @@ class SettingsScreen(QWidget):
                 self.selected_json_path = selected_path
 
     def apply_settings(self):
-        self.grid_size_final = self.grid_size_slider.value()
-        self.num_of_boxes_final = self.boxes_slider.value()
-        self.num_of_obstacles_final = self.obstacles_slider.value()
-        self.selected_json_path_final = self.selected_json_path
+        if self.grid_size_slider.value() ** 2 > self.boxes_slider.value() + self.obstacles_slider.value():
+            self.grid_size_final = self.grid_size_slider.value()
+            self.num_of_boxes_final = self.boxes_slider.value()
+            self.num_of_obstacles_final = self.obstacles_slider.value()
+            self.selected_json_path_final = self.selected_json_path
+        else:
+            QMessageBox.warning(self, "Wrong settings", "Could not apply changes, because of wrong values.")
 
     def back_to_menu(self):
         self.parent_window.stacked_widget.setCurrentIndex(0)
