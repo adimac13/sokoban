@@ -8,6 +8,15 @@ from engine.board import Board
 from enum import Enum
 from pathlib import Path
 from copy import copy
+import os
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 
 class State(Enum):
     NORMAL = 1
@@ -44,7 +53,7 @@ class MainWindow(QMainWindow):
         self.player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.player.setAudioOutput(self.audio_output)
-        self.player.setSource(QUrl.fromLocalFile("./sokoban-assets/soundtrack/soundtrack.mp3"))
+        self.player.setSource(QUrl.fromLocalFile(resource_path("./sokoban-assets/soundtrack/soundtrack.mp3")))
         self.audio_output.setVolume(0.2)
         self.player.setLoops(-1)
         self.player.play()
@@ -103,11 +112,11 @@ class GameScreen(QWidget):
 
         # Creating dict so that it can be later modified
         self.texture_dict = {
-            "ground_texture" : QPixmap("./sokoban-assets/environment/ground.png"),
-            "box_texture" : QPixmap("./sokoban-assets/environment/box.png"),
-            "goal_texture" : QPixmap("./sokoban-assets/environment/goal.png"),
-            "obstacle_texture" : QPixmap("./sokoban-assets/environment/obstacle.png"),
-            "box_on_goal_texture" : QPixmap("./sokoban-assets/environment/box_on_goal.png")
+            "ground_texture" : QPixmap(resource_path("./sokoban-assets/environment/ground.png")),
+            "box_texture" : QPixmap(resource_path("./sokoban-assets/environment/box.png")),
+            "goal_texture" : QPixmap(resource_path("./sokoban-assets/environment/goal.png")),
+            "obstacle_texture" : QPixmap(resource_path("./sokoban-assets/environment/obstacle.png")),
+            "box_on_goal_texture" : QPixmap(resource_path("./sokoban-assets/environment/box_on_goal.png"))
         }
 
         self.board_size = 600
@@ -206,15 +215,15 @@ class GameScreen(QWidget):
         self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
 
         if selected_player == 1:
-            self.texture_dict["player_down_texture"] = QPixmap("./sokoban-assets/player/playerJ_down.png")
-            self.texture_dict["player_left_texture"] = QPixmap("./sokoban-assets/player/playerJ_left.png")
-            self.texture_dict["player_right_texture"] = QPixmap("./sokoban-assets/player/playerJ_right.png")
-            self.texture_dict["player_up_texture"] = QPixmap("./sokoban-assets/player/playerJ_up.png")
+            self.texture_dict["player_down_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerJ_down.png"))
+            self.texture_dict["player_left_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerJ_left.png"))
+            self.texture_dict["player_right_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerJ_right.png"))
+            self.texture_dict["player_up_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerJ_up.png"))
         else:
-            self.texture_dict["player_down_texture"] = QPixmap("./sokoban-assets/player/playerA_down.png")
-            self.texture_dict["player_left_texture"] = QPixmap("./sokoban-assets/player/playerA_left.png")
-            self.texture_dict["player_right_texture"] = QPixmap("./sokoban-assets/player/playerA_right.png")
-            self.texture_dict["player_up_texture"] = QPixmap("./sokoban-assets/player/playerA_up.png")
+            self.texture_dict["player_down_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerA_down.png"))
+            self.texture_dict["player_left_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerA_left.png"))
+            self.texture_dict["player_right_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerA_right.png"))
+            self.texture_dict["player_up_texture"] = QPixmap(resource_path("./sokoban-assets/player/playerA_up.png"))
 
         self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path)
         self.grid_size = self.board.get_grid_size()
@@ -477,9 +486,9 @@ class SettingsScreen(QWidget):
         self.selected_json_path = None
         self.selected_player = 1
         self.selected_player_final = 1
-        self.player1_pixmap = QPixmap("./sokoban-assets/player/playerJ_down.png")
+        self.player1_pixmap = QPixmap(resource_path("./sokoban-assets/player/playerJ_down.png"))
         self.player1_pixmap = self.player1_pixmap.scaled(160,160,Qt.AspectRatioMode.KeepAspectRatio)
-        self.player2_pixmap = QPixmap("./sokoban-assets/player/playerA_down.png")
+        self.player2_pixmap = QPixmap(resource_path("./sokoban-assets/player/playerA_down.png"))
         self.player2_pixmap = self.player2_pixmap.scaled(160, 160, Qt.AspectRatioMode.KeepAspectRatio)
 
     def set_skin(self):
