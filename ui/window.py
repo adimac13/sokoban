@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sokoban")
-        self.setFixedSize(800, 600)
+        self.setFixedSize(1200, 900)
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
@@ -110,7 +110,7 @@ class GameScreen(QWidget):
             "box_on_goal_texture" : QPixmap("./sokoban-assets/environment/box_on_goal.png")
         }
 
-        self.board_size = 300
+        self.board_size = 600
         self.state = State.NORMAL
 
         self.parent_window = parent_window
@@ -461,8 +461,7 @@ class SettingsScreen(QWidget):
 
 
         self.player_cell = QLabel()
-        self.player_cell.setFixedSize(80, 80)
-        self.player_cell.setStyleSheet("border: 1px solid darkgray;")
+        self.player_cell.setFixedSize(160, 160)
 
         player_layout.addWidget(self.btn_playerJ)
         player_layout.addWidget(self.btn_playerA)
@@ -481,9 +480,9 @@ class SettingsScreen(QWidget):
         self.selected_player = 1
         self.selected_player_final = 1
         self.player1_pixmap = QPixmap("./sokoban-assets/player/playerJ_down.png")
-        self.player1_pixmap = self.player1_pixmap.scaled(80,80,Qt.AspectRatioMode.KeepAspectRatio)
+        self.player1_pixmap = self.player1_pixmap.scaled(160,160,Qt.AspectRatioMode.KeepAspectRatio)
         self.player2_pixmap = QPixmap("./sokoban-assets/player/playerA_down.png")
-        self.player2_pixmap = self.player2_pixmap.scaled(80, 80, Qt.AspectRatioMode.KeepAspectRatio)
+        self.player2_pixmap = self.player2_pixmap.scaled(160, 160, Qt.AspectRatioMode.KeepAspectRatio)
 
     def set_skin(self):
         if self.selected_player == 1:
