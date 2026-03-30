@@ -1,5 +1,4 @@
 import heapq
-from itertools import permutations
 from .node import Node
 from ..evaluation import find_deadlocks, heuristic_evaluation
 
@@ -12,10 +11,7 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
     goals_pos = tuple(goals_pos)
     state = (player_pos, boxes_pos, goals_pos)
 
-    # Crucial element for faster heuristic evaluation
-    all_permutations = list(permutations(range(len(boxes_pos))))
-
-    heapq.heappush(pq, Node(None, state, 0, None, heuristic_evaluation(player_pos, boxes_pos, goals_pos, all_permutations)))
+    heapq.heappush(pq, Node(None, state, 0, None, heuristic_evaluation(player_pos, boxes_pos, goals_pos)))
 
     success = False
 
@@ -32,7 +28,7 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
             new_pos_player = new_positions[0]
             new_box_pos = new_positions[1]
 
-            heuristic_eval = heuristic_evaluation(new_pos_player, new_box_pos, goals_pos, all_permutations)
+            heuristic_eval = heuristic_evaluation(new_pos_player, new_box_pos, goals_pos)
 
             if not heuristic_eval:
                 success = True
@@ -100,11 +96,6 @@ def player_move(key, last_state, obstacles_pos, size):
             break
 
     return [new_pos_player, tuple(boxes_pos)]
-
-
-
-
-
 
 if __name__ == "__main__":
     pass

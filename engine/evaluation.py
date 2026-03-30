@@ -145,7 +145,7 @@ def evaluate_board(boxes_pos, obstacles_pos, goals_pos, size):
             return 1
     return 0
 
-def heuristic_evaluation(player_pos, boxes_pos, goals_pos, all_permutations):
+def heuristic_evaluation(player_pos, boxes_pos, goals_pos):
     # slower but better
     # min_dist = float('inf')
     # goals_pos = list(goals_pos)
