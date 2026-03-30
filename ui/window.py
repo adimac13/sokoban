@@ -1,7 +1,6 @@
 import sys
-
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
-from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, \
+from PyQt6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, \
     QGridLayout, QFileDialog, QMessageBox, QSlider, QFrame, QHBoxLayout
 from PyQt6.QtCore import Qt, QTimer, QUrl
 from PyQt6.QtGui import QPixmap, QPainter
@@ -85,12 +84,15 @@ class MenuScreen(QWidget):
     def go_to_game(self):
         # Setting idx for 1
         self.parent.game_screen.setup_board(self.parent.settings_screen.grid_size_final, self.parent.settings_screen.num_of_boxes_final,
-                                            self.parent.settings_screen.num_of_obstacles_final, self.parent.settings_screen.selected_json_path_final)
+                                            self.parent.settings_screen.num_of_obstacles_final, self.parent.settings_screen.selected_json_path_final,
+                                            self.parent.settings_screen.selected_player_final)
 
         self.parent.stacked_widget.setCurrentIndex(1)
 
     def go_to_settings(self):
         # Setting idx for 2
+        self.parent.settings_screen.setup()
+
         self.parent.stacked_widget.setCurrentIndex(2)
 
 class GameScreen(QWidget):
@@ -105,10 +107,7 @@ class GameScreen(QWidget):
             "box_texture" : QPixmap("./sokoban-assets/environment/box.png"),
             "goal_texture" : QPixmap("./sokoban-assets/environment/goal.png"),
             "obstacle_texture" : QPixmap("./sokoban-assets/environment/obstacle.png"),
-            "player_down_texture" : QPixmap("./sokoban-assets/player/down.png"),
-            "player_left_texture" : QPixmap("./sokoban-assets/player/left.png"),
-            "player_right_texture" : QPixmap("./sokoban-assets/player/right.png"),
-            "player_up_texture" : QPixmap("./sokoban-assets/player/up.png")
+            "box_on_goal_texture" : QPixmap("./sokoban-assets/environment/box_on_goal.png")
         }
 
         self.board_size = 300
@@ -201,10 +200,21 @@ class GameScreen(QWidget):
         seconds = self.elapsed_time % 60
         self.timer_label.setText(f"{minutes:02}:{seconds:02}")
 
-    def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path):
+    def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path, selected_player):
         self.state = State.NORMAL
         self.text_label.setText("Sokoban")
         self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
+
+        if selected_player == 1:
+            self.texture_dict["player_down_texture"] = QPixmap("./sokoban-assets/player/playerJ_down.png")
+            self.texture_dict["player_left_texture"] = QPixmap("./sokoban-assets/player/playerJ_left.png")
+            self.texture_dict["player_right_texture"] = QPixmap("./sokoban-assets/player/playerJ_right.png")
+            self.texture_dict["player_up_texture"] = QPixmap("./sokoban-assets/player/playerJ_up.png")
+        else:
+            self.texture_dict["player_down_texture"] = QPixmap("./sokoban-assets/player/playerA_down.png")
+            self.texture_dict["player_left_texture"] = QPixmap("./sokoban-assets/player/playerA_left.png")
+            self.texture_dict["player_right_texture"] = QPixmap("./sokoban-assets/player/playerA_right.png")
+            self.texture_dict["player_up_texture"] = QPixmap("./sokoban-assets/player/playerA_up.png")
 
         self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path)
         self.grid_size = self.board.get_grid_size()
@@ -260,8 +270,9 @@ class GameScreen(QWidget):
                 cell.setStyleSheet("border: 1px solid darkgray;")
 
 
-
-                if current_pos in boxes_pos:
+                if current_pos in boxes_pos and current_pos in goals_pos:
+                    cell.setPixmap(self.texture_dict["box_on_goal_texture"])
+                elif current_pos in boxes_pos:
                     cell.setPixmap(self.texture_dict["box_texture"])
                 elif current_pos in goals_pos:
                     cell.setPixmap(self.texture_dict["goal_texture"])
@@ -366,9 +377,6 @@ class GameScreen(QWidget):
             QTimer.singleShot(400, self.a_star_solver)
         else:
             pass
-            # self.state = State.WIN
-            # self.text_label.setText("Win")
-            # self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: green")
 
     def back_to_menu(self):
         self.timer.stop()
@@ -439,6 +447,29 @@ class SettingsScreen(QWidget):
         main_layout.addLayout(bottom_layout)
         main_layout.addSpacing(300)
 
+        # Layout for choosing player skin
+        player_layout = QHBoxLayout()
+
+        self.btn_playerJ = QPushButton("Player 1")
+        self.btn_playerJ.setFixedSize(150, 40)
+        self.btn_playerJ.clicked.connect(self.choose_p1)
+        self.btn_playerJ.setStyleSheet("background-color: #447387;")
+
+        self.btn_playerA = QPushButton("Player 2")
+        self.btn_playerA.setFixedSize(150, 40)
+        self.btn_playerA.clicked.connect(self.choose_p2)
+
+
+        self.player_cell = QLabel()
+        self.player_cell.setFixedSize(80, 80)
+        self.player_cell.setStyleSheet("border: 1px solid darkgray;")
+
+        player_layout.addWidget(self.btn_playerJ)
+        player_layout.addWidget(self.btn_playerA)
+        player_layout.addWidget(self.player_cell)
+        main_layout.addLayout(player_layout)
+        main_layout.addSpacing(400)
+
         self.setLayout(main_layout)
 
         # Setting initial values for game settings
@@ -447,6 +478,36 @@ class SettingsScreen(QWidget):
         self.num_of_obstacles_final = copy(self.obstacles_slider.value())
         self.selected_json_path_final = None
         self.selected_json_path = None
+        self.selected_player = 1
+        self.selected_player_final = 1
+        self.player1_pixmap = QPixmap("./sokoban-assets/player/playerJ_down.png")
+        self.player1_pixmap = self.player1_pixmap.scaled(80,80,Qt.AspectRatioMode.KeepAspectRatio)
+        self.player2_pixmap = QPixmap("./sokoban-assets/player/playerA_down.png")
+        self.player2_pixmap = self.player2_pixmap.scaled(80, 80, Qt.AspectRatioMode.KeepAspectRatio)
+
+    def set_skin(self):
+        if self.selected_player == 1:
+            self.player_cell.setPixmap(self.player1_pixmap)
+        else:
+            self.player_cell.setPixmap(self.player2_pixmap)
+
+    def choose_p1(self):
+        self.selected_player = 1
+        self.set_skin()
+        self.btn_playerJ.setStyleSheet("background-color: #447387;")
+        self.btn_playerA.setStyleSheet("")
+
+    def choose_p2(self):
+        self.selected_player = 2
+        self.set_skin()
+        self.btn_playerA.setStyleSheet("background-color: #447387;")
+        self.btn_playerJ.setStyleSheet("")
+
+    def setup(self):
+        if self.selected_player == 1:
+            self.player_cell.setPixmap(self.player1_pixmap)
+        else:
+            self.player_cell.setPixmap(self.player2_pixmap)
 
 
     def handle_file_remove(self):
@@ -513,6 +574,7 @@ class SettingsScreen(QWidget):
             self.num_of_boxes_final = self.boxes_slider.value()
             self.num_of_obstacles_final = self.obstacles_slider.value()
             self.selected_json_path_final = self.selected_json_path
+            self.selected_player_final = self.selected_player
             QMessageBox.information(self, "Done", "Successfully applied.")
         else:
             QMessageBox.warning(self, "Wrong settings", "Could not apply changes because of wrong values.")

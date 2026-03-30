@@ -55,6 +55,8 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
         second = i[1]
         if first[0] != second [0] and first[1] != second[1]:
             return 1
+        if new_box_pos[0] == 0 or new_box_pos[0] == size - 1 or new_box_pos[1] == 0 or new_box_pos[1] == size - 1:
+            return 1
     elif len(i) == 1:
         obs = list(i)[0]
         if new_box_pos[1] == obs[1]:
@@ -71,6 +73,9 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
                 for new_obs in detected_obs:
                     new_pos_to_check = (new_obs[0], new_box_pos[1])
                     if new_pos_to_check in (set(other_boxes_pos) | set(obstacles_pos)): return 1
+
+        if new_box_pos[0] == 0 or new_box_pos[0] == size - 1 or new_box_pos[1] == 0 or new_box_pos[1] == size - 1:
+            return 1
 
 
     # Box locked by other boxes
