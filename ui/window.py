@@ -269,29 +269,27 @@ class GameScreen(QWidget):
                 cell.setFixedSize(self.board_size // self.grid_size, self.board_size // self.grid_size)
                 cell.setStyleSheet("border: 1px solid darkgray;")
 
+                curr_texture = self.texture_dict["ground_texture"]
+                combined = curr_texture.copy()
+                painter = QPainter(combined)
 
                 if current_pos in boxes_pos and current_pos in goals_pos:
-                    cell.setPixmap(self.texture_dict["box_on_goal_texture"])
+                    painter.drawPixmap(0,0, self.texture_dict["box_on_goal_texture"])
                 elif current_pos in boxes_pos:
-                    cell.setPixmap(self.texture_dict["box_texture"])
+                    painter.drawPixmap(0, 0, self.texture_dict["box_texture"])
                 elif current_pos in goals_pos:
-                    cell.setPixmap(self.texture_dict["goal_texture"])
-                    curr_texture = self.texture_dict["goal_texture"]
+                    painter.drawPixmap(0, 0, self.texture_dict["goal_texture"])
                 elif current_pos in obstacles_pos:
-                    cell.setPixmap(self.texture_dict["obstacle_texture"])
-                else:
-                    cell.setPixmap(self.texture_dict["ground_texture"])
-                    curr_texture = self.texture_dict["ground_texture"]
+                    painter.drawPixmap(0, 0, self.texture_dict["obstacle_texture"])
 
                 if current_pos == player_pos:
-                    combined = curr_texture.copy()
-                    painter = QPainter(combined)
                     if key is None or key == 's': painter.drawPixmap(0,0, self.texture_dict["player_down_texture"])
                     elif key == 'w': painter.drawPixmap(0,0, self.texture_dict["player_up_texture"])
                     elif key == 'a': painter.drawPixmap(0,0, self.texture_dict["player_left_texture"])
                     elif key == 'd': painter.drawPixmap(0,0, self.texture_dict["player_right_texture"])
-                    painter.end()
-                    cell.setPixmap(combined)
+
+                painter.end()
+                cell.setPixmap(combined)
 
 
                 self.grid_layout.addWidget(cell, row, col)

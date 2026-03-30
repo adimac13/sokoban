@@ -11,9 +11,13 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
     if (new_box_pos[0] == 0 or new_box_pos[0] == size - 1) and (new_box_pos[1] == 0 or new_box_pos[1] == size - 1):
         return 1
 
+    # Box on the edge -> checking if there are any goals
+    box_and_goal_on_edge = False
+
     if new_box_pos[0] == 0:
         goals_on_edge = [goal for goal in goals_pos if goal[0] == 0]
         boxes_on_edge = [box for box in other_boxes_pos if box[0] == 0]
+        box_and_goal_on_edge = True
 
         if len(goals_on_edge) < len(boxes_on_edge) + 1:
             return 1
@@ -21,6 +25,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
     elif new_box_pos[0] == size - 1:
         goals_on_edge = [goal for goal in goals_pos if goal[0] == size - 1]
         boxes_on_edge = [box for box in other_boxes_pos if box[0] == size - 1]
+        box_and_goal_on_edge = True
 
         if len(goals_on_edge) < len(boxes_on_edge) + 1:
             return 1
@@ -28,6 +33,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
     elif new_box_pos[1] == 0:
         goals_on_edge = [goal for goal in goals_pos if goal[1] == 0]
         boxes_on_edge = [box for box in other_boxes_pos if box[1] == 0]
+        box_and_goal_on_edge = True
 
         if len(goals_on_edge) < len(boxes_on_edge) + 1:
             return 1
@@ -35,6 +41,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
     elif new_box_pos[1] == size - 1:
         goals_on_edge = [goal for goal in goals_pos if goal[1] == size - 1]
         boxes_on_edge = [box for box in other_boxes_pos if box[1] == size - 1]
+        box_and_goal_on_edge = True
 
         if len(goals_on_edge) < len(boxes_on_edge) + 1:
             return 1
@@ -74,7 +81,7 @@ def find_deadlocks(new_box_pos, other_boxes_pos, obstacles_pos, goals_pos, size)
                     new_pos_to_check = (new_obs[0], new_box_pos[1])
                     if new_pos_to_check in (set(other_boxes_pos) | set(obstacles_pos)): return 1
 
-        if new_box_pos[0] == 0 or new_box_pos[0] == size - 1 or new_box_pos[1] == 0 or new_box_pos[1] == size - 1:
+        if (new_box_pos[0] == 0 or new_box_pos[0] == size - 1 or new_box_pos[1] == 0 or new_box_pos[1] == size - 1) and not box_and_goal_on_edge:
             return 1
 
 
