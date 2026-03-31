@@ -1,3 +1,4 @@
+import json
 import sys
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLabel, \
@@ -558,12 +559,59 @@ class SettingsScreen(QWidget):
         if selected_file:
             selected_path = Path(selected_file)
             if not selected_path.suffix == '.json':
-                QMessageBox.warning(self, "Wrong file extension", "Choose .json file.")
+                QMessageBox.warning(self, "Error", "Choose .json file.")
                 self.file_label.setText("No JSON file selected.")
                 self.selected_json_path = None
             else:
-                self.file_label.setText(selected_path.name)
-                self.selected_json_path = selected_path
+                if not self._check_json(selected_file):
+                    QMessageBox.warning(self, "Error", "Wrong settings.")
+                    self.file_label.setText("No JSON file selected.")
+                    self.selected_json_path = None
+                else:
+                    self.file_label.setText(selected_path.name)
+                    self.selected_json_path = selected_path
+
+    def _check_json(self, path):
+        """
+        Returns 1 if json is correct, else 0.
+        """
+        with open(str(path), 'r') as f:
+            boxes_pos = []
+            goals_pos = []
+            obstacles_pos = []
+            player_pos = []
+            data = json.load(f)
+            p = data['player']
+            b = data['boxes']
+            g = data['goals']
+            o = data['obstacles']
+            s = data['size']
+            player_pos.append(tuple(p))
+            grid_size = s
+
+            for box in b:
+                if box[0] < 0 or box[0] > grid_size - 1 or box[1] < 0 or box[1] > grid_size - 1:
+                    return 0
+                boxes_pos.append(tuple(box))
+            for goal in g:
+                if goal[0] < 0 or goal[0] > grid_size - 1 or goal[1] < 0 or goal[1] > grid_size - 1:
+                    return 0
+                goals_pos.append(tuple(goal))
+            for obstacle in o:
+                if obstacle[0] < 0 or obstacle[0] > grid_size - 1 or obstacle[1] < 0 or obstacle[1] > grid_size - 1:
+                    return 0
+                obstacles_pos.append(tuple(obstacle))
+
+
+        b_g = (set(boxes_pos) & set(goals_pos)) | (set(boxes_pos) & set(player_pos))
+        b_o = (set(boxes_pos) & set(obstacles_pos)) | (set(obstacles_pos) & set(player_pos))
+        g_o = (set(goals_pos) & set(obstacles_pos)) | (set(goals_pos) & set(player_pos))
+
+        if len(b_g) or len(b_o) or len(g_o) or grid_size**2 < (len(boxes_pos) + len(goals_pos) + len(obstacles_pos) + 1):
+            # Some positions overlap
+            return 0
+        else:
+            return 1
 
     def apply_settings(self):
         if self.grid_size_slider.value() ** 2 > self.boxes_slider.value() + self.obstacles_slider.value():
