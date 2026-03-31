@@ -8,13 +8,15 @@ from .a_star_algorithm import find_shortest_path
 import time
 
 class Board:
-    def __init__(self, grid_size = 6, num_of_boxes = 4, num_of_obstacles = 6, json_path = None):
+    def __init__(self, grid_size = 6, num_of_boxes = 4, num_of_obstacles = 6, json_path = None, a_star_move_time = None, max_a_star_moves = None):
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
         self.num_of_undo = 0
         self.num_of_redo = 0
         self.final_cmd = None
+        self.a_star_move_time = a_star_move_time
+        self.max_a_star_moves = max_a_star_moves
 
         # Setting all permutations at the beginning for faster heuristic evaluation
         self.all_permutations = list(permutations(range(num_of_boxes)))
@@ -208,7 +210,7 @@ class Board:
             json.dump(data, f)
 
     def _optimal_path(self):
-        return find_shortest_path(self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size)
+        return find_shortest_path(self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size, self.max_a_star_moves)
 
     def status(self):
         # 1 if all boxes are on goal positions, else 0

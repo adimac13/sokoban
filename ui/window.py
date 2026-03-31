@@ -84,9 +84,13 @@ class MenuScreen(QWidget):
 
     def go_to_game(self):
         # Setting idx for 1
-        self.parent.game_screen.setup_board(self.parent.settings_screen.grid_size_final, self.parent.settings_screen.num_of_boxes_final,
-                                            self.parent.settings_screen.num_of_obstacles_final, self.parent.settings_screen.selected_json_path_final,
-                                            self.parent.settings_screen.selected_player_final)
+        self.parent.game_screen.setup_board(self.parent.settings_screen.grid_size_final,
+                                                self.parent.settings_screen.num_of_boxes_final,
+                                                self.parent.settings_screen.num_of_obstacles_final,
+                                                self.parent.settings_screen.selected_json_path_final,
+                                                self.parent.settings_screen.selected_player_final, self.parent.settings_screen.a_star_move_time_final,
+                                                self.parent.settings_screen.max_a_star_moves_final)
+
 
         self.parent.stacked_widget.setCurrentIndex(1)
 
@@ -201,7 +205,7 @@ class GameScreen(QWidget):
         seconds = self.elapsed_time % 60
         self.timer_label.setText(f"{minutes:02}:{seconds:02}")
 
-    def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path, selected_player):
+    def setup_board(self, grid_size, num_of_boxes, num_of_obstacles, json_path, selected_player, a_star_move_time, max_a_star_moves):
         self.state = State.NORMAL
         self.text_label.setText("Sokoban")
         self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
@@ -217,7 +221,7 @@ class GameScreen(QWidget):
             self.texture_dict["player_right_texture"] = QPixmap("./sokoban-assets/player/playerA_right.png")
             self.texture_dict["player_up_texture"] = QPixmap("./sokoban-assets/player/playerA_up.png")
 
-        self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path)
+        self.board = Board(grid_size, num_of_boxes, num_of_obstacles, json_path, a_star_move_time, max_a_star_moves)
         self.grid_size = self.board.get_grid_size()
         self.update_stats()
 
@@ -373,7 +377,10 @@ class GameScreen(QWidget):
         self.board.input_handle(move)
         self.draw_board(move)
         if len(self.final_cmd):
-            QTimer.singleShot(400, self.a_star_solver)
+            if self.board.a_star_move_time is not None:
+                QTimer.singleShot(self.board.a_star_move_time, self.a_star_solver)
+            else:
+                QTimer.singleShot(400, self.a_star_solver)
         else:
             pass
 
@@ -478,6 +485,12 @@ class SettingsScreen(QWidget):
         self.selected_json_path = None
         self.selected_player = 1
         self.selected_player_final = 1
+
+        self.max_a_star_moves = None
+        self.max_a_star_moves_final = None
+        self.a_star_move_time = None
+        self.a_star_move_time_final = None
+
         self.player1_pixmap = QPixmap("./sokoban-assets/player/playerJ_down.png")
         self.player1_pixmap = self.player1_pixmap.scaled(160,160,Qt.AspectRatioMode.KeepAspectRatio)
         self.player2_pixmap = QPixmap("./sokoban-assets/player/playerA_down.png")
@@ -611,6 +624,17 @@ class SettingsScreen(QWidget):
             # Some positions overlap
             return 0
         else:
+            # Positions dont overlap
+            if "a_star_move_time" in data:
+                self.a_star_move_time = data["a_star_move_time"]
+            else:
+                self.a_star_move_time = None
+
+            if "max_a_star_moves" in data:
+                self.max_a_star_moves = data["max_a_star_moves"]
+            else:
+                self.max_a_star_moves = None
+
             return 1
 
     def apply_settings(self):
@@ -620,6 +644,8 @@ class SettingsScreen(QWidget):
             self.num_of_obstacles_final = self.obstacles_slider.value()
             self.selected_json_path_final = self.selected_json_path
             self.selected_player_final = self.selected_player
+            self.a_star_move_time_final = self.a_star_move_time
+            self.max_a_star_moves_final = self.max_a_star_moves
             QMessageBox.information(self, "Done", "Successfully applied.")
         else:
             QMessageBox.warning(self, "Wrong settings", "Could not apply changes because of wrong values.")

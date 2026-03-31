@@ -3,7 +3,7 @@ from .node import Node
 from ..evaluation import find_deadlocks, heuristic_evaluation
 
 
-def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
+def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size, max_a_star_moves):
     pq = []
     heapq.heapify(pq)
     visited = set()
@@ -15,7 +15,13 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size):
 
     success = False
 
+    i = 0
+
     while pq:
+        if max_a_star_moves is not None:
+            if i > max_a_star_moves:
+                return None
+        i += 1
         node = heapq.heappop(pq)
         if node.state in visited:
             continue
