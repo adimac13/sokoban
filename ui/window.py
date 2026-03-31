@@ -9,6 +9,7 @@ from engine.board import Board
 from enum import Enum
 from pathlib import Path
 from copy import copy
+from .factory import FactoryEntity
 
 class State(Enum):
     NORMAL = 1
@@ -109,7 +110,8 @@ class GameScreen(QWidget):
         # Creating dict so that it can be later modified
         self.texture_dict = {
             "ground_texture" : QPixmap("./sokoban-assets/environment/ground.png"),
-            "box_texture" : QPixmap("./sokoban-assets/environment/box.png"),
+            # "box_texture" : QPixmap("./sokoban-assets/environment/box.png"),
+            "box_texture": QPixmap("./sokoban-assets/environment/box.png"),
             "goal_texture" : QPixmap("./sokoban-assets/environment/goal.png"),
             "obstacle_texture" : QPixmap("./sokoban-assets/environment/obstacle.png"),
             "box_on_goal_texture" : QPixmap("./sokoban-assets/environment/box_on_goal.png")
