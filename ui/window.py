@@ -9,7 +9,6 @@ from engine.board import Board
 from enum import Enum
 from pathlib import Path
 from copy import copy
-from .factory import FactoryEntity
 
 class State(Enum):
     NORMAL = 1
