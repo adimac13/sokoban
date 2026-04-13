@@ -8,7 +8,6 @@ class Server:
     def __init__(self):
         self.clients = []
         self.nicknames = []
-
         self.host = host
         self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,6 +32,7 @@ class Server:
                 nickname = self.nicknames[index]
                 self.nicknames.remove(nickname)
                 self.broadcast(f'{nickname} left the chat'.encode('ascii'))
+                print(f'Disconnected: {nickname}')
                 break
 
     def accepting_client(self):
@@ -43,11 +43,9 @@ class Server:
             client.send(f'NICK'.encode('ascii'))
             time.sleep(0.01)
             client.send(f'{len(self.clients)}'.encode('ascii')) # Setting name of the client, with the number of current clients
-
-            nickname = client.recv(1024).decode('ascii')
+            nickname = len(self.clients)
 
             print(f'Connected: {address} | {nickname}')
-            self.broadcast(f'{nickname} joined the chat\n'.encode('ascii'))
             self.nicknames.append(nickname)
             client.send(f'Connected'.encode('ascii'))
 
