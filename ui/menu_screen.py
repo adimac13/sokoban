@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox
+
 
 class MenuScreen(QWidget):
     def __init__(self, parent):
@@ -15,20 +16,23 @@ class MenuScreen(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Buttons
-        btn_play = QPushButton("Singleplayer")
+        btn_singleplayer = QPushButton("Singleplayer")
+        btn_multiplayer = QPushButton("Multiplayer")
         btn_exit = QPushButton("Exit")
         btn_settings = QPushButton("Settings")
 
-        for btn in (btn_play, btn_settings, btn_exit):
+        for btn in (btn_singleplayer, btn_multiplayer, btn_settings, btn_exit):
             btn.setFixedSize(200, 40)
 
-        btn_play.clicked.connect(self.go_to_game)
+        btn_singleplayer.clicked.connect(self.go_to_game)
+        btn_multiplayer.clicked.connect(self.go_to_multiplayer)
         btn_settings.clicked.connect(self.go_to_settings)
         btn_exit.clicked.connect(sys.exit)
 
         # Visuals
         layout.addWidget(title)
-        layout.addWidget(btn_play)
+        layout.addWidget(btn_singleplayer)
+        layout.addWidget(btn_multiplayer)
         layout.addWidget(btn_settings)
         layout.addWidget(btn_exit)
         self.setLayout(layout)
@@ -48,5 +52,11 @@ class MenuScreen(QWidget):
     def go_to_settings(self):
         # Setting idx for 2
         self.parent.settings_screen.setup()
-
         self.parent.stacked_widget.setCurrentIndex(2)
+
+    def go_to_multiplayer(self):
+        try:
+            self.parent.game_multi_screen.setup_board()
+            self.parent.stacked_widget.setCurrentIndex(3)
+        except:
+            QMessageBox.warning(self, "Connection failed", "Could not connect to server.")

@@ -4,6 +4,7 @@ from PyQt6.QtCore import QUrl
 
 from .menu_screen import MenuScreen
 from .singleplayer_screen import SinglePlayerScreen
+from .multiplayer_screen import MultiPlayerScreen
 from .settings_screen import SettingsScreen
 
 class MainWindow(QMainWindow):
@@ -18,13 +19,15 @@ class MainWindow(QMainWindow):
         self.menu_screen = MenuScreen(self)
         self.game_single_screen = SinglePlayerScreen(self)
         self.settings_screen = SettingsScreen(self)
+        self.game_multi_screen = MultiPlayerScreen(self)
 
         self.grid_size = self.settings_screen.grid_size_final
 
-        # 0 -> menu, 1 -> game, 2 -> settings
+        # 0 -> menu, 1 -> singleplayer, 2 -> settings, 3-> multiplayer
         self.stacked_widget.addWidget(self.menu_screen)
         self.stacked_widget.addWidget(self.game_single_screen)
         self.stacked_widget.addWidget(self.settings_screen)
+        self.stacked_widget.addWidget(self.game_multi_screen)
 
         # Creating game settings
         self.grid_size = 8
