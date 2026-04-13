@@ -35,7 +35,6 @@ class Client:
                 break
 
     def write(self, message):
-        self.nick_received.wait()
         self.client.send(message.encode('ascii'))
 
 

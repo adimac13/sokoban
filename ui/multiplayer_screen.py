@@ -18,7 +18,7 @@ class MultiPlayerScreen(QWidget):
         super().__init__()
 
         self.board = None
-        self.client = None #TODO client must be set to None when closing the window
+        self.client = None
         self.players_pos = None
         self.boxes_pos = None
         self.goals_pos = None
@@ -93,8 +93,8 @@ class MultiPlayerScreen(QWidget):
 
     def setup_board(self):
         # Creating TCP client
-        client_thread = threading.Thread(target=self.handle_client)
-        client_thread.start()
+        self.client_thread = threading.Thread(target=self.handle_client)
+        self.client_thread.start()
 
         while self.client is None:
             time.sleep(0.01)
@@ -115,7 +115,10 @@ class MultiPlayerScreen(QWidget):
         for texture in self.texture_dict.keys():
             self.texture_dict[texture] = self.texture_dict[texture].scaled(self.board_size // self.grid_size, self.board_size // self.grid_size,
                                                                    Qt.AspectRatioMode.KeepAspectRatio)
-        self.draw_board()
+
+        self.draw_timer = QTimer()
+        self.draw_timer.timeout.connect(self.draw_board)
+        self.draw_timer.start(100)
 
     def handle_client(self):
         self.client = Client()
@@ -143,6 +146,8 @@ class MultiPlayerScreen(QWidget):
                 widget.setParent(None)
 
         # Creating new board
+        self._update_info()
+
         for row in range(self.grid_size):
             for col in range(self.grid_size):
                 current_pos = [row, col]
@@ -165,91 +170,51 @@ class MultiPlayerScreen(QWidget):
                     painter.drawPixmap(0, 0, self.texture_dict["obstacle_texture"])
 
                 if current_pos in self.players_pos:
-                    if key is None or key == 's': painter.drawPixmap(0,0, self.texture_dict["player_down_texture"])
-                    elif key == 'w': painter.drawPixmap(0,0, self.texture_dict["player_up_texture"])
-                    elif key == 'a': painter.drawPixmap(0,0, self.texture_dict["player_left_texture"])
-                    elif key == 'd': painter.drawPixmap(0,0, self.texture_dict["player_right_texture"])
+                    painter.drawPixmap(0, 0, self.texture_dict["player_down_texture"])
+                    # if key is None or key == 's': painter.drawPixmap(0,0, self.texture_dict["player_down_texture"])
+                    # elif key == 'w': painter.drawPixmap(0,0, self.texture_dict["player_up_texture"])
+                    # elif key == 'a': painter.drawPixmap(0,0, self.texture_dict["player_left_texture"])
+                    # elif key == 'd': painter.drawPixmap(0,0, self.texture_dict["player_right_texture"])
 
                 painter.end()
                 cell.setPixmap(combined)
-
-
                 self.grid_layout.addWidget(cell, row, col)
 
+
+    def _key_handle(self, key):
+        self.client.message_received.clear()
+        self.client.write(key)
+        self.client.message_received.wait()
 
     def keyPressEvent(self, event):
         if self.state == State.NORMAL:
             if event.key() == Qt.Key.Key_W:
-                self.board.input_handle('w', game=True)
-                self.draw_board('w')
+                self._key_handle('w')
             elif event.key() == Qt.Key.Key_S:
-                self.board.input_handle('s', game=True)
-                self.draw_board('s')
+                self._key_handle('s')
             elif event.key() == Qt.Key.Key_A:
-                self.board.input_handle('a', game=True)
-                self.draw_board('a')
+                self._key_handle('a')
             elif event.key() == Qt.Key.Key_D:
-                self.board.input_handle('d', game=True)
-                self.draw_board('d')
-            elif event.key() == Qt.Key.Key_U:
-                bef_pos = self.board.player_pos
-                self.board.input_handle('u', game=True)
-                curr_pos = self.board.player_pos
-
-                if curr_pos[0] > bef_pos[0]:
-                    self.draw_board('w')
-                elif curr_pos[0] < bef_pos[0]:
-                    self.draw_board('s')
-                elif curr_pos[1] > bef_pos[1]:
-                    self.draw_board('a')
-                elif curr_pos[1] < bef_pos[1]:
-                    self.draw_board('d')
-
-            elif event.key() == Qt.Key.Key_R:
-                bef_pos = self.board.player_pos
-                self.board.input_handle('r', game=True)
-                curr_pos = self.board.player_pos
-
-                if curr_pos[0] < bef_pos[0]:
-                    self.draw_board('w')
-                elif curr_pos[0] > bef_pos[0]:
-                    self.draw_board('s')
-                elif curr_pos[1] < bef_pos[1]:
-                    self.draw_board('a')
-                elif curr_pos[1] > bef_pos[1]:
-                    self.draw_board('d')
-
+                self._key_handle('d')
             elif event.key() == Qt.Key.Key_P:
-                self.board.input_handle('p', game=True)
-                self.elapsed_time = 0
-                self.timer_label.setText("00:00")
-                self.draw_board()
-            elif event.key() == Qt.Key.Key_M:
-                self.board.input_handle('m', game=True)
+                pass
 
-                if not self.board.evaluation:
-                    self.board.num_of_moves = 0
-                    self.board.num_of_redo = 0
-                    self.board.num_of_undo = 0
-                    self.final_cmd = self.board.final_cmd
-                    if self.final_cmd is not None:
-                        self.a_star_solver()
-                    else:
-                        QMessageBox.warning(self, "Error", "Could not find any route.")
-                else:
-                    QMessageBox.warning(self, "Error", "Could not find route, because deadlock is detected.")
         elif self.state == State.WIN:
             if event.key() == Qt.Key.Key_P:
-                self.board.input_handle('p')
-                self.elapsed_time = 0
-                self.timer_label.setText("00:00")
-                self.timer.start(1000)
-                self.state = State.NORMAL
-                self.draw_board()
+                pass
 
 
 
     def back_to_menu(self):
         self.client.end_of_client = True
         self.client.client.close()
+        self.client_thread.join()
+        self.draw_timer.stop()
+        self.board = None
+        self.client = None
+        self.players_pos = None
+        self.boxes_pos = None
+        self.goals_pos = None
+        self.obstacles_pos = None
+        self.grid_size = None
         self.parent_window.stacked_widget.setCurrentIndex(0)

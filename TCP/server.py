@@ -32,11 +32,26 @@ class Server:
             client.send(message)
 
 
+    def _key_handle(self, key, client):
+        index = self.clients.index(client)
+        self.board.player_pos = self.players_pos[index]
+        self.board.input_handle(key)
+        self.players_pos[index] = self.board.player_pos
+        self.send_board_info()
+
     def handle_client(self, client):
         while True:
             try:
-                message = client.recv(1024)
-                self.broadcast(message)
+                message = client.recv(1024).decode('ascii')
+                if message == "w":
+                    self._key_handle('w', client)
+                elif message == "s":
+                    self._key_handle('s', client)
+                elif message == "a":
+                    self._key_handle('a', client)
+                elif message == "d":
+                    self._key_handle('d', client)
+
             except:
                 index = self.clients.index(client)
                 self.clients.remove(client)
@@ -45,7 +60,7 @@ class Server:
                 self.nicknames.remove(nickname)
                 player_pos = self.players_pos[index]
                 self.players_pos.remove(player_pos)
-                self.broadcast(f'{nickname} left the chat'.encode('ascii'))
+                # self.broadcast(f'{nickname} left the chat'.encode('ascii'))
                 print(f'Disconnected: {nickname}')
                 break
 
