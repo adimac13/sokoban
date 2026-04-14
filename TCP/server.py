@@ -10,9 +10,9 @@ from engine.board import Board
 class Server:
     def __init__(self):
         # Config for sokoban
-        self.grid_size = 8
-        self.num_of_boxes = 7
-        self.num_of_obstacles = 6
+        self.grid_size = 7
+        self.num_of_boxes = 5
+        self.num_of_obstacles = 4
         self.players_pos = []
         self.board_win = False
 
@@ -43,8 +43,26 @@ class Server:
     def _key_handle(self, key, client):
         index = self.clients.index(client)
         self.board.player_pos = self.players_pos[index]
+
+        # Saving old boxes pos in case, new state collides with player position
+        _, boxes_pos, _, _ = self.board.get_positions()
+        old_boxes_pos = boxes_pos.copy()
+
+        # Handling standard move
         self.board.input_handle(key)
-        self.players_pos[index] = self.board.player_pos
+
+        # Checking if after move is made, it does not collide with another player
+        _, boxes_pos, _, _ = self.board.get_positions()
+        new_box_pos = [tuple(pos) for pos in boxes_pos]
+        new_player_pos = [tuple(pos) for pos in self.players_pos]
+        i = set(new_box_pos) & set(new_player_pos)
+
+        if len(i) > 0:
+            # If new move collides with another player pos, old boxes pos are loaded
+            self.board.boxes_pos = [tuple(pos) for pos in old_boxes_pos]
+        else:
+            # Else standard move handling
+            self.players_pos[index] = self.board.player_pos
 
         # Checking whether all boxes are on goal positions
         if self.board.status():

@@ -190,6 +190,11 @@ class MultiPlayerScreen(QWidget):
         # Creating new board
         self._update_info()
 
+        if self._board_win():
+            self.text_label.setText("Win")
+            self.text_label.setStyleSheet(
+                "font-size: 34px; font-weight: bold; color: green; font-family: 'Courier New', monospace;")
+
         for row in range(self.grid_size):
             for col in range(self.grid_size):
                 current_pos = [row, col]
