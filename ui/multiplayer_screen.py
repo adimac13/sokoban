@@ -3,7 +3,7 @@ import threading
 from enum import Enum
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QFileDialog, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPixmap, QPainter
+from PyQt6.QtGui import QPixmap, QPainter, QColor
 from engine.board import Board
 from TCP.client import Client
 import time
@@ -12,6 +12,31 @@ class State(Enum):
     NORMAL = 1
     DEADLOCK = 2
     WIN = 3
+
+name2rgba = {
+    0: "255, 255, 0, 150",
+    1: "255, 0, 255, 150",
+    2: "0, 255, 255, 150",
+    3: "255, 0, 0, 150",
+    4: "0, 255, 0, 150",
+    5: "0, 0, 255, 150",
+    6: "120, 199, 106, 150",
+    7: "255, 130, 0, 150",
+    8: "230, 53, 213, 150",
+    9: "227, 68, 215, 150",
+}
+
+name2color = {
+    0: "yellow",
+    1: "purple",
+    2: "aqua",
+    3: "red",
+    4: "green",
+    5: "blue",
+    6: "light green",
+    7: "orange",
+    8: "pink",
+}
 
 class MultiPlayerScreen(QWidget):
     def __init__(self, parent_window):
@@ -56,10 +81,14 @@ class MultiPlayerScreen(QWidget):
 
         self.instruction_label = QLabel(
             "<span style='color: lightgray;'>[W/A/S/D]</span> Move ‎ ‎ •‎ ‎ "
-            "<span style='color: lightgray;'>[P]</span> Reset ‎ ‎ •‎ ‎"
+            "<span style='color: lightgray;'>[P]</span> Reset"
         )
         self.instruction_label.setStyleSheet("font-size: 15px; font-weight: bold; color: gray;")
         self.instruction_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.player_color_label = QLabel("")
+        self.player_color_label.setStyleSheet("font-size: 25px; font-family: 'Courier New', monospace;")
+        self.player_color_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(0)
@@ -79,6 +108,9 @@ class MultiPlayerScreen(QWidget):
 
         # Adding instruction to layout
         main_layout.addWidget(self.instruction_label)
+
+        # Adding color label to layout
+        main_layout.addWidget(self.player_color_label)
 
         # Adding grid to layout
         main_layout.addLayout(self.grid_layout)
@@ -119,6 +151,7 @@ class MultiPlayerScreen(QWidget):
         self.draw_timer = QTimer()
         self.draw_timer.timeout.connect(self.draw_board)
         self.draw_timer.start(100)
+        self.player_color_label.setText(f"You are <span style='color: {name2color[self.client_num]};'>{name2color[self.client_num]}</span>")
 
     def handle_client(self):
         self.client = Client()
@@ -128,7 +161,7 @@ class MultiPlayerScreen(QWidget):
         This function updates crucial info for visualization, using TCP server
         """
         msg_json = self.client.msg
-        print(msg_json)
+        # print(msg_json)
         msg_dict = json.loads(msg_json)
 
         self.players_pos = msg_dict["player"]
@@ -170,7 +203,19 @@ class MultiPlayerScreen(QWidget):
                     painter.drawPixmap(0, 0, self.texture_dict["obstacle_texture"])
 
                 if current_pos in self.players_pos:
-                    painter.drawPixmap(0, 0, self.texture_dict["player_down_texture"])
+
+                    player_pixmap = self.texture_dict["player_down_texture"].copy()
+
+                    # Colouring player, based on the nickname
+                    tint_painter = QPainter(player_pixmap)
+                    tint_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
+
+                    tint_painter.fillRect(player_pixmap.rect(), QColor(*self._unpack_player_color(current_pos)))
+                    # print(self._unpack_player_color(current_pos))
+                    # print(name2rgba[self.client_num])
+
+                    tint_painter.end()
+                    painter.drawPixmap(0, 0, player_pixmap)
                     # if key is None or key == 's': painter.drawPixmap(0,0, self.texture_dict["player_down_texture"])
                     # elif key == 'w': painter.drawPixmap(0,0, self.texture_dict["player_up_texture"])
                     # elif key == 'a': painter.drawPixmap(0,0, self.texture_dict["player_left_texture"])
@@ -180,6 +225,11 @@ class MultiPlayerScreen(QWidget):
                 cell.setPixmap(combined)
                 self.grid_layout.addWidget(cell, row, col)
 
+    def _unpack_player_color(self, player_pos):
+        nickname = self.players_pos.index(player_pos) + 1 # Adding one, because nicknames start from 1
+        color = name2rgba[nickname].split(',')
+        final_color = [int(c) for c in color]
+        return final_color
 
     def _key_handle(self, key):
         self.client.message_received.clear()

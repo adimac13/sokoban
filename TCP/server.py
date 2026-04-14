@@ -60,6 +60,7 @@ class Server:
                 self.nicknames.remove(nickname)
                 player_pos = self.players_pos[index]
                 self.players_pos.remove(player_pos)
+                self.send_board_info()
                 # self.broadcast(f'{nickname} left the chat'.encode('ascii'))
                 print(f'Disconnected: {nickname}')
                 break
