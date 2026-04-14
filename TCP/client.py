@@ -19,17 +19,20 @@ class Client:
         thread_receive.start()
 
     def receive(self):
+        buffer = ''
         while not self.end_of_client:
             try:
-                message = self.client.recv(1024).decode('ascii')
-                if message == 'NICK':
-                    self.client.send(f'Success'.encode('ascii'))
-                    self.nickname = self.client.recv(1024).decode('ascii')
-                    # print(f"Your name is: {self.nickname}")
-                    self.nick_received.set()
-                else:
-                    self.msg = message
-                    self.message_received.set()
+                buffer += self.client.recv(1024).decode('ascii')
+                while '\n' in buffer:
+                    message, buffer = buffer.split('\n', 1)
+                    if message == 'NICK':
+                        self.client.send(f'Success'.encode('ascii'))
+                        self.nickname = self.client.recv(1024).decode('ascii')
+                        # print(f"Your name is: {self.nickname}")
+                        self.nick_received.set()
+                    else:
+                        self.msg = message
+                        self.message_received.set()
             except:
                 self.client.close()
                 break

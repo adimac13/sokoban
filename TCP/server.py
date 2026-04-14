@@ -105,7 +105,7 @@ class Server:
             self.clients.append(client)
 
             # Setting name of the client, with the number of current clients
-            client.send(f'NICK'.encode('ascii'))
+            client.send(f'NICK\n'.encode('ascii'))
             _ = client.recv(1024).decode('ascii')
 
             nickname = 0
@@ -113,7 +113,7 @@ class Server:
                 while nickname in self.nicknames:
                     nickname += 1
 
-            client.send(f'{nickname}'.encode('ascii'))
+            client.send(f'{nickname}\n'.encode('ascii'))
 
 
             # Setting initial position of new client
@@ -142,7 +142,7 @@ class Server:
         }
 
         data_to_send = json.dumps(data)
-        self.broadcast(data_to_send.encode('ascii'))
+        self.broadcast((data_to_send + '\n').encode('ascii'))
 
     def generate_new_board(self):
         self.board = Board(grid_size = self.grid_size, num_of_boxes=self.num_of_boxes, num_of_obstacles=self.num_of_obstacles)
