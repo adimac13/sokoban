@@ -14,6 +14,7 @@ class Server:
         self.num_of_boxes = 7
         self.num_of_obstacles = 6
         self.players_pos = []
+        self.board_win = False
 
         self.clients = []
         self.nicknames = []
@@ -23,7 +24,9 @@ class Server:
         self.server.bind((self.host, self.port))
         self.server.listen()
 
-        self.generate_new_board()
+        # self.generate_new_board()
+        self.board_thread = threading.Thread(target = self.generating_new_board_loop)
+        self.board_thread.start()
 
         self.accepting_client() # Endless loop for accepting new clients
 
@@ -31,26 +34,38 @@ class Server:
         for client in self.clients:
             client.send(message)
 
+    def generating_new_board_loop(self):
+        while True:
+            if not len(self.clients):
+                self.generate_new_board()
+            time.sleep(1)
 
     def _key_handle(self, key, client):
         index = self.clients.index(client)
         self.board.player_pos = self.players_pos[index]
         self.board.input_handle(key)
         self.players_pos[index] = self.board.player_pos
+
+        # Checking whether all boxes are on goal positions
+        if self.board.status():
+            self.board_win = True
+
         self.send_board_info()
 
     def handle_client(self, client):
         while True:
             try:
                 message = client.recv(1024).decode('ascii')
-                if message == "w":
-                    self._key_handle('w', client)
-                elif message == "s":
-                    self._key_handle('s', client)
-                elif message == "a":
-                    self._key_handle('a', client)
-                elif message == "d":
-                    self._key_handle('d', client)
+
+                if not self.board_win:
+                    if message == "w":
+                        self._key_handle('w', client)
+                    elif message == "s":
+                        self._key_handle('s', client)
+                    elif message == "a":
+                        self._key_handle('a', client)
+                    elif message == "d":
+                        self._key_handle('d', client)
 
             except:
                 index = self.clients.index(client)
@@ -73,8 +88,14 @@ class Server:
             # Setting name of the client, with the number of current clients
             client.send(f'NICK'.encode('ascii'))
             _ = client.recv(1024).decode('ascii')
-            client.send(f'{len(self.clients)}'.encode('ascii'))
-            nickname = len(self.clients)
+
+            nickname = 0
+            if nickname in self.nicknames:
+                while nickname in self.nicknames:
+                    nickname += 1
+
+            client.send(f'{nickname}'.encode('ascii'))
+
 
             # Setting initial position of new client
             client_pos = self.generate_position()
@@ -97,7 +118,8 @@ class Server:
             "boxes" : boxes_pos,
             "goals" : goals_pos,
             "obstacles" : obstacles_pos,
-            "size" : self.grid_size
+            "size" : self.grid_size,
+            "names" : self.nicknames
         }
 
         data_to_send = json.dumps(data)
@@ -105,6 +127,7 @@ class Server:
 
     def generate_new_board(self):
         self.board = Board(grid_size = self.grid_size, num_of_boxes=self.num_of_boxes, num_of_obstacles=self.num_of_obstacles)
+        self.board_win = False
 
     def generate_position(self):
         _ , boxes_pos, goals_pos, obstacles_pos = self.board.get_positions()

@@ -4,7 +4,6 @@ from enum import Enum
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QFileDialog, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QPainter, QColor
-from engine.board import Board
 from TCP.client import Client
 import time
 
@@ -49,7 +48,7 @@ class MultiPlayerScreen(QWidget):
         self.goals_pos = None
         self.obstacles_pos = None
         self.grid_size = None
-
+        self.nicknames = None
 
         # Creating dict so that it can be later modified
         self.texture_dict = {
@@ -137,8 +136,6 @@ class MultiPlayerScreen(QWidget):
         self._update_info()
         self.client_num = int(self.client.nickname)
 
-        print(self.client_num)
-
         self.state = State.NORMAL
         self.text_label.setText("Sokoban")
         self.text_label.setStyleSheet("font-size: 34px; font-weight: bold; color: white; font-family: 'Courier New', monospace;")
@@ -151,7 +148,7 @@ class MultiPlayerScreen(QWidget):
         self.draw_timer = QTimer()
         self.draw_timer.timeout.connect(self.draw_board)
         self.draw_timer.start(100)
-        self.player_color_label.setText(f"You are <span style='color: {name2color[self.client_num]};'>{name2color[self.client_num]}</span>")
+        self.player_color_label.setText(f"You are <span style='color: {name2color[self.client_num]};'>{name2color[self.client_num]}</span>. PlayerID: {self.client_num}")
 
     def handle_client(self):
         self.client = Client()
@@ -169,6 +166,18 @@ class MultiPlayerScreen(QWidget):
         self.goals_pos = msg_dict["goals"]
         self.obstacles_pos = msg_dict["obstacles"]
         self.grid_size = msg_dict["size"]
+        self.nicknames = msg_dict["names"]
+
+    def _board_win(self):
+        """
+        Checks locally whether all boxes are on goal position
+        """
+        new_box_pos = [tuple(pos) for pos in self.boxes_pos]
+        new_goals_pos = [tuple(pos) for pos in self.goals_pos]
+        i = set(new_box_pos) & set(new_goals_pos)
+        if len(i) == len(self.goals_pos):
+            return True
+        return False
 
 
     def draw_board(self, key = None):
@@ -226,15 +235,18 @@ class MultiPlayerScreen(QWidget):
                 self.grid_layout.addWidget(cell, row, col)
 
     def _unpack_player_color(self, player_pos):
-        nickname = self.players_pos.index(player_pos) + 1 # Adding one, because nicknames start from 1
+        index = self.players_pos.index(player_pos)
+        nickname = self.nicknames[index]
+        nickname %= 10 # If there are more than 10 players, the colours start from 0
         color = name2rgba[nickname].split(',')
         final_color = [int(c) for c in color]
         return final_color
 
     def _key_handle(self, key):
-        self.client.message_received.clear()
-        self.client.write(key)
-        self.client.message_received.wait()
+        if not self._board_win():
+            self.client.message_received.clear()
+            self.client.write(key)
+            self.client.message_received.wait()
 
     def keyPressEvent(self, event):
         if self.state == State.NORMAL:
@@ -267,4 +279,5 @@ class MultiPlayerScreen(QWidget):
         self.goals_pos = None
         self.obstacles_pos = None
         self.grid_size = None
+        self.nicknames = None
         self.parent_window.stacked_widget.setCurrentIndex(0)
