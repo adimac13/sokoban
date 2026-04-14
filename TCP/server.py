@@ -1,3 +1,4 @@
+# If you want to host server, run this script
 import threading
 import socket
 import time
