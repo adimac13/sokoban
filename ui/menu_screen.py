@@ -17,14 +17,17 @@ class MenuScreen(QWidget):
 
         # Buttons
         btn_singleplayer = QPushButton("Singleplayer")
+        btn_ai = QPushButton("AI mode")
+        btn_ai.setToolTip("Works only on 6x6 board with 3 goals and 3 obstacles")
         btn_multiplayer = QPushButton("Multiplayer")
         btn_exit = QPushButton("Exit")
         btn_settings = QPushButton("Settings")
 
-        for btn in (btn_singleplayer, btn_multiplayer, btn_settings, btn_exit):
+        for btn in (btn_singleplayer, btn_ai,btn_multiplayer, btn_settings, btn_exit):
             btn.setFixedSize(200, 40)
 
         btn_singleplayer.clicked.connect(self.go_to_game)
+        btn_ai.clicked.connect(self.go_to_ai)
         btn_multiplayer.clicked.connect(self.go_to_multiplayer)
         btn_settings.clicked.connect(self.go_to_settings)
         btn_exit.clicked.connect(sys.exit)
@@ -32,6 +35,7 @@ class MenuScreen(QWidget):
         # Visuals
         layout.addWidget(title)
         layout.addWidget(btn_singleplayer)
+        layout.addWidget(btn_ai)
         layout.addWidget(btn_multiplayer)
         layout.addWidget(btn_settings)
         layout.addWidget(btn_exit)
@@ -48,6 +52,16 @@ class MenuScreen(QWidget):
 
 
         self.parent.stacked_widget.setCurrentIndex(1)
+
+    def go_to_ai(self):
+        self.parent.game_ai_screen.setup_board(self.parent.settings_screen.grid_size_final,
+                                                   self.parent.settings_screen.num_of_boxes_final,
+                                                   self.parent.settings_screen.num_of_obstacles_final,
+                                                   self.parent.settings_screen.selected_json_path_final,
+                                                   self.parent.settings_screen.selected_player_final,
+                                                   self.parent.settings_screen.a_star_move_time_final,
+                                                   self.parent.settings_screen.max_a_star_moves_final)
+        self.parent.stacked_widget.setCurrentIndex(4)
 
     def go_to_settings(self):
         # Setting idx for 2

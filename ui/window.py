@@ -6,6 +6,7 @@ from .menu_screen import MenuScreen
 from .singleplayer_screen import SinglePlayerScreen
 from .multiplayer_screen import MultiPlayerScreen
 from .settings_screen import SettingsScreen
+from .ai_screen import AIScreen
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -15,19 +16,21 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
-        # Creating two different screens
+        # Creating five different screens
         self.menu_screen = MenuScreen(self)
         self.game_single_screen = SinglePlayerScreen(self)
         self.settings_screen = SettingsScreen(self)
         self.game_multi_screen = MultiPlayerScreen(self)
+        self.game_ai_screen = AIScreen(self)
 
         self.grid_size = self.settings_screen.grid_size_final
 
-        # 0 -> menu, 1 -> singleplayer, 2 -> settings, 3-> multiplayer
+        # 0 -> menu, 1 -> singleplayer, 2 -> settings, 3-> multiplayer, 4-> ai
         self.stacked_widget.addWidget(self.menu_screen)
         self.stacked_widget.addWidget(self.game_single_screen)
         self.stacked_widget.addWidget(self.settings_screen)
         self.stacked_widget.addWidget(self.game_multi_screen)
+        self.stacked_widget.addWidget(self.game_ai_screen)
 
         # Creating game settings
         self.grid_size = 8

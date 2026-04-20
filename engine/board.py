@@ -8,7 +8,8 @@ from .a_star_algorithm import find_shortest_path
 import time
 
 class Board:
-    def __init__(self, grid_size = 6, num_of_boxes = 4, num_of_obstacles = 6, json_path = None, a_star_move_time = None, max_a_star_moves = None):
+    def __init__(self, grid_size = 6, num_of_boxes = 3, num_of_obstacles = 3, json_path = None, a_star_move_time = None, max_a_star_moves = None):
+        self.ai_pos = None
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
@@ -84,6 +85,11 @@ class Board:
         self.initial_pos = [self.player_pos, self.boxes_pos.copy()]
         self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
 
+    def find_random_free_space(self):
+        pos = (randint(0, self.grid_size - 1), randint(0, self.grid_size - 1))
+        while pos == self.player_pos or pos in self.boxes_pos or pos in self.goals_pos or pos in self.obstacles_pos:
+            pos = (randint(0, self.grid_size - 1), randint(0, self.grid_size - 1))
+        return pos
 
     def get_positions(self):
         return self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos
@@ -91,7 +97,7 @@ class Board:
     def get_stats(self):
         return self.num_of_moves, self.num_of_undo, self.num_of_redo
 
-    def input_handle(self, key, path = Path('./'), game = False):
+    def input_handle(self, key, path = Path('./'), game = False, ai = False):
         if key.lower() == 'w': vec = [-1, 0]    # going up
         elif key.lower() == 's': vec = [1, 0]   # going down
         elif key.lower() == 'a': vec = [0, -1]  # going left
@@ -111,7 +117,10 @@ class Board:
             self._save_to_json(path)
             return
         elif key.lower() == 'm':
-            self.final_cmd = self._optimal_path()
+            if not ai:
+                self.final_cmd = self._optimal_path()
+            else:
+                self.final_cmd = self._ai_optimal_path()
             return
         else: return
 
@@ -211,6 +220,9 @@ class Board:
 
     def _optimal_path(self):
         return find_shortest_path(self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size, self.max_a_star_moves)
+
+    def _ai_optimal_path(self):
+        return find_shortest_path(self.ai_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size, self.max_a_star_moves)
 
     def status(self):
         # 1 if all boxes are on goal positions, else 0
