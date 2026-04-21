@@ -10,6 +10,7 @@ import time
 class Board:
     def __init__(self, grid_size = 6, num_of_boxes = 3, num_of_obstacles = 3, json_path = None, a_star_move_time = None, max_a_star_moves = None):
         self.ai_pos = None
+        self.box_moved = False # Flag whether box was moved, it is only used for ai mode
         self.undo = deque()
         self.redo = deque()
         self.num_of_moves = 0
@@ -152,6 +153,8 @@ class Board:
                 else:
                     self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
 
+                if not ai:
+                    self.box_moved = True
                 break
 
         self.player_pos = new_pos_player

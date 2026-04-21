@@ -1,6 +1,7 @@
 import heapq
 from .node import Node
 from ..evaluation import find_deadlocks, heuristic_evaluation
+import random
 
 
 def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size, max_a_star_moves):
@@ -47,7 +48,8 @@ def find_shortest_path(player_pos, boxes_pos, goals_pos, obstacles_pos, size, ma
             if new_state in visited:
                 continue
 
-            heapq.heappush(pq, Node(move, new_state, node.num_of_moves + 1, node, node.num_of_moves + heuristic_eval))
+            # If there are some states with the same cost, method randomly chooses one of them because of random.uniform
+            heapq.heappush(pq, Node(move, new_state, node.num_of_moves + 1, node, node.num_of_moves + heuristic_eval + random.uniform(0,0.1)))
 
         if success:
             break

@@ -46,7 +46,6 @@ class SettingsScreen(QWidget):
 
         main_layout.addStretch()
 
-
         # Bottom layout
         bottom_layout = QHBoxLayout()
         btn_apply = QPushButton("Apply")
