@@ -17,11 +17,14 @@ class MenuScreen(QWidget):
 
         # Buttons
         btn_singleplayer = QPushButton("Singleplayer")
+        btn_singleplayer.setToolTip("Set up map in settings and play!")
         btn_ai = QPushButton("AI mode")
-        btn_ai.setToolTip("Works only on 6x6 board with 3 goals and 3 obstacles")
+        btn_ai.setToolTip("Co-op with ai on 6x6 board with 3 goals and 3 obstacles!")
         btn_multiplayer = QPushButton("Multiplayer")
+        btn_multiplayer.setToolTip("Play with someone else using TCP!")
         btn_exit = QPushButton("Exit")
         btn_settings = QPushButton("Settings")
+        btn_settings.setToolTip("Set the settings for the map in singleplayer mode!")
 
         for btn in (btn_singleplayer, btn_ai,btn_multiplayer, btn_settings, btn_exit):
             btn.setFixedSize(200, 40)
@@ -35,8 +38,8 @@ class MenuScreen(QWidget):
         # Visuals
         layout.addWidget(title)
         layout.addWidget(btn_singleplayer)
-        layout.addWidget(btn_ai)
         layout.addWidget(btn_multiplayer)
+        layout.addWidget(btn_ai)
         layout.addWidget(btn_settings)
         layout.addWidget(btn_exit)
         self.setLayout(layout)

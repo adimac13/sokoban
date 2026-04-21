@@ -153,9 +153,10 @@ class Board:
                 else:
                     self.evaluation = evaluate_board(self.boxes_pos, self.obstacles_pos, self.goals_pos, self.grid_size)
 
-                if not ai:
-                    self.box_moved = True
                 break
+
+        if not ai:
+            self.box_moved = True
 
         self.player_pos = new_pos_player
         self.num_of_moves += 1
@@ -225,7 +226,7 @@ class Board:
         return find_shortest_path(self.player_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size, self.max_a_star_moves)
 
     def _ai_optimal_path(self):
-        return find_shortest_path(self.ai_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size, self.max_a_star_moves)
+        return find_shortest_path(self.ai_pos, self.boxes_pos, self.goals_pos, self.obstacles_pos, self.grid_size, self.max_a_star_moves, ai = True)
 
     def status(self):
         # 1 if all boxes are on goal positions, else 0
@@ -235,7 +236,7 @@ class Board:
         return 0
 
     def min_number_of_moves(self):
-        return heuristic_evaluation(self.player_pos, self.boxes_pos, self.goals_pos, self.all_permutations)
+        return heuristic_evaluation(self.player_pos, self.boxes_pos, self.goals_pos)
 
     def get_grid_size(self):
         return self.grid_size

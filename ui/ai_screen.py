@@ -136,17 +136,17 @@ class AIScreen(QWidget):
         self.btn_aggressive.setStyleSheet("background-color: #447387;")
         self.btn_normal.setStyleSheet("")
 
-
     def ai_handle(self):
         self.ai_status.setText("AI status: Thinking...")
         time.sleep(1)
         while self.parent_window.stacked_widget.currentIndex() == 4 and self.state != State.WIN:
             self.ai_status.setText("AI status: Thinking...")
-            time.sleep(1)
 
             with self.game_lock:
                 self.board.ai_pos = self.ai_pos
+                self.board.obstacles_pos.append(self.board.player_pos)
                 self.board.input_handle('m', game=True, ai = True)
+                self.board.obstacles_pos.pop()
 
             if not self.board.evaluation:
                 if self.board.final_cmd is not None:
@@ -162,7 +162,7 @@ class AIScreen(QWidget):
 
                 else:
                     self.ai_status.setText("AI status: Can't find any route")
-                    break
+                    time.sleep(1)
             else:
                 self.ai_status.setText("AI status: Can't find any route because of deadlock")
                 break
@@ -171,7 +171,6 @@ class AIScreen(QWidget):
             self.ai_status.setText("AI status: Stopped")
 
     def _ai_move(self):
-        print(len(self.board.final_cmd))
         if self.parent_window.stacked_widget.currentIndex() != 4:
             return
 
@@ -260,16 +259,6 @@ class AIScreen(QWidget):
                 elif event.key() == Qt.Key.Key_D:
                     self.board.input_handle('d', game=True)
                     self.move_made = True
-                elif event.key() == Qt.Key.Key_U:
-                    pass
-                    # self.board.input_handle('u', game=True)
-
-                elif event.key() == Qt.Key.Key_R:
-                    # self.board.input_handle('r', game=True)
-                    pass
-
-                elif event.key() == Qt.Key.Key_P:
-                    pass
 
         elif self.state == State.WIN:
             if event.key() == Qt.Key.Key_P:
